@@ -117,7 +117,7 @@ export default function ArticleEditor() {
     setTestingTweet(true);
     setTweetResult(null);
     try {
-      const res = await base44.functions.invoke("autoTweetArticle", { articleId: id });
+      const res = await base44.functions.invoke("autoTweetArticle", { articleId: id, force: true });
       setTweetResult({ success: true, message: "Tweet sent successfully!" });
     } catch (err) {
       setTweetResult({ success: false, message: err.message });

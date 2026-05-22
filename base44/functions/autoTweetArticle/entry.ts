@@ -10,7 +10,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { articleId } = await req.json();
+    const body = await req.json();
+    const { articleId, force } = body;
     if (!articleId) {
       return Response.json({ error: 'articleId is required' }, { status: 400 });
     }
@@ -22,8 +23,8 @@ Deno.serve(async (req) => {
     }
     const article = articles[0];
 
-    // Don't tweet if already tweeted
-    if (article.tweeted) {
+    // Skip if already tweeted (unless force flag is set)
+    if (article.tweeted && !force) {
       return Response.json({ message: 'Already tweeted' });
     }
 
