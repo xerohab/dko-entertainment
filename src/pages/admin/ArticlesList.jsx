@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, Eye, Search, Filter, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Search, Loader2, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ArticlesList() {
@@ -11,6 +11,7 @@ export default function ArticlesList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleting, setDeleting] = useState(null);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -30,6 +31,17 @@ export default function ArticlesList() {
     setDeleting(null);
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm(`DELETE ALL ${articles.length} ARTICLES? This CANNOT be undone!`)) return;
+    if (!confirm("Are you absolutely sure? All articles will be permanently deleted.")) return;
+    setDeletingAll(true);
+    for (const a of articles) {
+      await base44.entities.Article.delete(a.id);
+    }
+    setArticles([]);
+    setDeletingAll(false);
+  };
+
   const filtered = articles.filter(a => {
     const matchSearch = !search || a.title?.toLowerCase().includes(search.toLowerCase()) || a.category?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || a.status === statusFilter;
@@ -44,10 +56,22 @@ export default function ArticlesList() {
           <h1 className="font-oswald font-bold text-white text-3xl uppercase">Articles</h1>
           <p className="text-muted-foreground font-inter text-sm mt-0.5">{articles.length} total</p>
         </div>
-        <Link to="/admin/articles/new" className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-oswald font-semibold text-sm tracking-wider uppercase rounded hover:bg-red-700 transition-colors">
-          <Plus className="w-4 h-4" />
-          New Article
-        </Link>
+        <div className="flex items-center gap-2">
+          {user.role === "admin" && articles.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              disabled={deletingAll}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-900/40 border border-red-700/50 text-red-400 font-oswald font-semibold text-sm tracking-wider uppercase rounded hover:bg-red-900/70 transition-colors disabled:opacity-40"
+            >
+              {deletingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+              Delete All
+            </button>
+          )}
+          <Link to="/admin/articles/new" className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-oswald font-semibold text-sm tracking-wider uppercase rounded hover:bg-red-700 transition-colors">
+            <Plus className="w-4 h-4" />
+            New Article
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

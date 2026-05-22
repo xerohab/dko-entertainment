@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ImageUploader from "@/components/media/ImageUploader";
-import { Trash2, Copy, Check, Loader2, Grid, List } from "lucide-react";
+import { Trash2, Copy, Check, Loader2, Grid, List, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function MediaLibrary() {
@@ -10,6 +10,7 @@ export default function MediaLibrary() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const [deletingAll, setDeletingAll] = useState(false);
   const [copied, setCopied] = useState(null);
   const [view, setView] = useState("grid");
 
@@ -39,6 +40,17 @@ export default function MediaLibrary() {
     setDeleting(null);
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm(`DELETE ALL ${images.length} images? This CANNOT be undone!`)) return;
+    if (!confirm("Are you absolutely sure? All media will be permanently deleted.")) return;
+    setDeletingAll(true);
+    for (const img of images) {
+      await base44.entities.MediaImage.delete(img.id);
+    }
+    setImages([]);
+    setDeletingAll(false);
+  };
+
   const handleCopy = (url) => {
     navigator.clipboard.writeText(url);
     setCopied(url);
@@ -53,6 +65,16 @@ export default function MediaLibrary() {
           <p className="text-muted-foreground font-inter text-sm mt-0.5">{images.length} images</p>
         </div>
         <div className="flex gap-2">
+          {user.role === "admin" && images.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              disabled={deletingAll}
+              className="flex items-center gap-2 px-4 py-2 bg-red-900/40 border border-red-700/50 text-red-400 font-oswald font-semibold text-sm tracking-wider uppercase rounded hover:bg-red-900/70 transition-colors disabled:opacity-40"
+            >
+              {deletingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+              Delete All
+            </button>
+          )}
           <button onClick={() => setView("grid")} className={`p-2 rounded border transition-colors ${view === "grid" ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-white"}`}><Grid className="w-4 h-4" /></button>
           <button onClick={() => setView("list")} className={`p-2 rounded border transition-colors ${view === "list" ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-white"}`}><List className="w-4 h-4" /></button>
         </div>

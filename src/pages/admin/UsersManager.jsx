@@ -140,7 +140,7 @@ export default function UsersManager() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end">
-                      {editingRole !== u.id && u.id !== user.id && (
+                      {editingRole !== u.id && (
                         <button
                           onClick={() => { setEditingRole(u.id); setNewRole(u.role || "user"); }}
                           className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
