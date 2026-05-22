@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight } from "lucide-react";
+import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight, UserCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const adminLinks = [
@@ -60,15 +60,25 @@ export default function AdminSidebar({ user }) {
 
       {/* User + Logout */}
       <div className="px-4 py-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-oswald font-bold">
-            {user?.full_name?.[0]?.toUpperCase() || "U"}
+        <Link to="/admin/profile" className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 rounded-full bg-primary overflow-hidden flex items-center justify-center text-white text-xs font-oswald font-bold shrink-0">
+            {user?.avatar
+              ? <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              : (user?.full_name?.[0]?.toUpperCase() || "U")
+            }
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-inter font-medium text-white truncate">{user?.full_name || "User"}</div>
+            <div className="text-sm font-inter font-medium text-white truncate">{user?.display_name || user?.full_name || "User"}</div>
             <div className="text-xs text-muted-foreground capitalize">{user?.role || "editor"}</div>
           </div>
-        </div>
+        </Link>
+        <Link
+          to="/admin/profile"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-muted-foreground hover:text-white hover:bg-sidebar-accent transition-colors mb-1"
+        >
+          <UserCircle className="w-4 h-4" />
+          My Profile
+        </Link>
         <button
           onClick={() => base44.auth.logout("/")}
           className="w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-muted-foreground hover:text-white hover:bg-sidebar-accent transition-colors"

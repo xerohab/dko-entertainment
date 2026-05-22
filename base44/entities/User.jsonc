@@ -9,20 +9,27 @@
         "editor",
         "user"
       ],
-      "default": "user",
-      "description": "User role in the system"
+      "default": "user"
     },
     "display_name": {
       "type": "string",
-      "description": "Public byline name"
+      "description": "Public display name"
+    },
+    "avatar": {
+      "type": "string",
+      "description": "Profile picture URL"
+    },
+    "motto": {
+      "type": "string",
+      "description": "Personal motto or bio tagline"
     },
     "bio": {
       "type": "string",
-      "description": "Short author bio"
+      "description": "Short biography"
     },
-    "avatar_url": {
+    "twitter_handle": {
       "type": "string",
-      "description": "Profile image URL"
+      "description": "Twitter/X handle without @"
     }
   }
 }

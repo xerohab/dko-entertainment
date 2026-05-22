@@ -21,6 +21,7 @@ import MediaLibrary from './pages/admin/MediaLibrary';
 import CategoriesManager from './pages/admin/CategoriesManager';
 import UsersManager from './pages/admin/UsersManager';
 import SiteSettings from './pages/admin/SiteSettings';
+import UserProfile from './pages/admin/UserProfile';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -59,7 +60,9 @@ const AuthenticatedApp = () => {
         <Route path="media" element={<MediaLibrary />} />
         <Route path="categories" element={<CategoriesManager />} />
         <Route path="users" element={<UsersManager />} />
+        <Route path="users/:id" element={<UserProfile />} />
         <Route path="settings" element={<SiteSettings />} />
+        <Route path="profile" element={<UserProfile />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

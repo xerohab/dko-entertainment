@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { UserPlus, Shield, Edit2, Loader2, Mail, Check, X } from "lucide-react";
+import { UserPlus, Shield, Edit2, Loader2, Mail, Check, X, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function UsersManager() {
   const { user } = useOutletContext();
@@ -139,14 +140,24 @@ export default function UsersManager() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end">
+                    <div className="flex justify-end items-center gap-1">
                       {editingRole !== u.id && (
-                        <button
-                          onClick={() => { setEditingRole(u.id); setNewRole(u.role || "user"); }}
-                          className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        <>
+                          <Link
+                            to={`/admin/users/${u.id}`}
+                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                            title="Edit profile"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => { setEditingRole(u.id); setNewRole(u.role || "user"); }}
+                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                            title="Change role"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>
