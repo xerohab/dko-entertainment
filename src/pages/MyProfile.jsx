@@ -23,22 +23,18 @@ export default function MyProfile() {
   });
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(authed => {
-      if (!authed) {
-        base44.auth.redirectToLogin(window.location.href);
-        return;
-      }
-      base44.auth.me().then(user => {
-        setCurrentUser(user);
-        setForm({
-          display_name: user.display_name || user.full_name || "",
-          motto: user.motto || "",
-          bio: user.bio || "",
-          twitter_handle: user.twitter_handle || "",
-          avatar: user.avatar || "",
-        });
-        setLoading(false);
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+      setForm({
+        display_name: user.display_name || user.full_name || "",
+        motto: user.motto || "",
+        bio: user.bio || "",
+        twitter_handle: user.twitter_handle || "",
+        avatar: user.avatar || "",
       });
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
     });
   }, []);
 
