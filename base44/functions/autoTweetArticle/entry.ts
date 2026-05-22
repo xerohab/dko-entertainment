@@ -82,14 +82,17 @@ Deno.serve(async (req) => {
         b64 = btoa(b64);
 
         const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
-        const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
+        const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST', data: { media_data: b64 } }, token));
         
         const controller2 = new AbortController();
         const timeout2 = setTimeout(() => controller2.abort(), 15000);
         
         const uploadRes = await fetch(uploadUrl, {
           method: 'POST',
-          headers: { Authorization: uploadAuth['Authorization'] },
+          headers: { 
+            'Authorization': uploadAuth['Authorization'],
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
           body: new URLSearchParams({ media_data: b64 }),
           signal: controller2.signal,
         });
