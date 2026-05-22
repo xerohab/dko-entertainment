@@ -28,27 +28,32 @@ export default function UserProfile() {
   });
 
   useEffect(() => {
+    if (!currentUser) return;
     if (isEditingOther && currentUser?.role !== "admin") {
       navigate("/admin");
       return;
     }
     load();
-  }, [id]);
+  }, [id, currentUser]);
 
   const load = async () => {
     setLoading(true);
-    const users = await base44.entities.User.list("-created_date", 200);
-    const target = users.find(u => u.id === targetUserId);
-    if (target) {
-      setProfile(target);
-      setForm({
-        display_name: target.display_name || target.full_name || "",
-        motto: target.motto || "",
-        bio: target.bio || "",
-        twitter_handle: target.twitter_handle || "",
-        avatar: target.avatar || "",
-        role: target.role || "editor",
-      });
+    try {
+      const users = await base44.entities.User.list("-created_date", 200);
+      const target = users.find(u => u.id === targetUserId);
+      if (target) {
+        setProfile(target);
+        setForm({
+          display_name: target.display_name || target.full_name || "",
+          motto: target.motto || "",
+          bio: target.bio || "",
+          twitter_handle: target.twitter_handle || "",
+          avatar: target.avatar || "",
+          role: target.role || "editor",
+        });
+      }
+    } catch (err) {
+      console.error("Error loading user:", err);
     }
     setLoading(false);
   };

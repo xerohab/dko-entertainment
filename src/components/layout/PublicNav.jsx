@@ -324,6 +324,13 @@ export default function PublicNav() {
                   <p className="font-inter text-xs text-muted-foreground">{currentUser.email}</p>
                   <p className="font-oswald text-sm font-bold text-white uppercase">{currentUser.full_name}</p>
                 </div>
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-foreground hover:text-white hover:bg-secondary/50 transition-colors flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" /> MY PROFILE
+                </Link>
                 {(currentUser.role === "admin" || currentUser.role === "editor") && (
                   <Link to="/admin" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-primary flex items-center gap-2" onClick={() => setMobileOpen(false)}>
                     <Shield className="w-4 h-4" /> ADMIN PANEL
