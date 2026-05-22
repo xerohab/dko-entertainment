@@ -163,7 +163,7 @@ function UserMenu({ user, onLogout }) {
             <Bookmark className="w-3.5 h-3.5" /> Saved Articles
           </Link>
           <Link
-            to="/admin/profile"
+            to="/profile"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 px-4 py-2 font-oswald text-sm uppercase text-foreground hover:text-white hover:bg-secondary/50 transition-colors"
           >
