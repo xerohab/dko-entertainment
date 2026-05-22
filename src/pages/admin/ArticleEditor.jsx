@@ -239,8 +239,7 @@ export default function ArticleEditor() {
           </div>
 
           {/* Author */}
-          {user?.role === "admin" && (
-            <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author Name</label>
                 <input
@@ -260,7 +259,6 @@ export default function ArticleEditor() {
                 />
               </div>
             </div>
-          )}
 
           {/* Body */}
           <div>
