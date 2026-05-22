@@ -9,7 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Public pages
 import Home from './pages/Home.jsx';
 import CategoryPage from './pages/CategoryPage';
-import ArticlePage from './pages/ArticlePage.jsx';
+import ArticlePage from './pages/ArticlePage';
 import SearchPage from './pages/SearchPage';
 import Pricing from './pages/Pricing';
 import SavedArticles from './pages/SavedArticles';

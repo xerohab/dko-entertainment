@@ -3,7 +3,7 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import RichEditor from "@/components/editor/RichEditor";
 import ImagePickerModal from "@/components/media/ImagePickerModal";
-import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search, Trash2 } from "lucide-react";
+import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search, Trash2, RefreshCw, CheckCircle2 } from "lucide-react";
 
 export default function ArticleEditor() {
   const { id } = useParams();
@@ -19,6 +19,8 @@ export default function ArticleEditor() {
     published_date: "", seo_title: "", seo_description: "",
   });
   const [saving, setSaving] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [loading, setLoading] = useState(!isNew);
   const [catSearch, setCatSearch] = useState("");
@@ -64,6 +66,19 @@ export default function ArticleEditor() {
         : [...f.categories, catName];
       return { ...f, categories: updated, category: updated[0] || "" };
     });
+  };
+
+  const handleUpdate = async () => {
+    setUpdating(true);
+    const data = {
+      ...form,
+      author_email: user.email,
+      author_name: user.display_name || user.full_name,
+    };
+    await base44.entities.Article.update(id, data);
+    setUpdating(false);
+    setUpdateSuccess(true);
+    setTimeout(() => setUpdateSuccess(false), 3000);
   };
 
   const handleSave = async (publish = false) => {
@@ -126,6 +141,20 @@ export default function ArticleEditor() {
           {isNew ? "New Article" : "Edit Article"}
         </h1>
         <div className="ml-auto flex items-center gap-2">
+          {!isNew && (
+            <button
+              onClick={handleUpdate}
+              disabled={updating || !form.title}
+              className={`flex items-center gap-2 px-4 py-2 border rounded font-inter text-sm transition-colors disabled:opacity-40 ${
+                updateSuccess
+                  ? "bg-green-500/10 border-green-500/40 text-green-400"
+                  : "bg-secondary border-border text-foreground hover:border-accent hover:text-accent"
+              }`}
+            >
+              {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : updateSuccess ? <CheckCircle2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+              {updateSuccess ? "Updated!" : "Update"}
+            </button>
+          )}
           <button
             onClick={() => handleSave(false)}
             disabled={saving || !form.title}
@@ -242,6 +271,20 @@ export default function ArticleEditor() {
                 />
               </div>
               <div className="border-t border-border pt-3 space-y-2">
+                {!isNew && (
+                  <button
+                    onClick={handleUpdate}
+                    disabled={updating || !form.title}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 border rounded font-inter text-sm transition-colors disabled:opacity-40 ${
+                      updateSuccess
+                        ? "bg-green-500/10 border-green-500/40 text-green-400"
+                        : "bg-secondary border-border text-foreground hover:border-accent hover:text-accent"
+                    }`}
+                  >
+                    {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : updateSuccess ? <CheckCircle2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+                    {updateSuccess ? "Updated!" : "Update Article"}
+                  </button>
+                )}
                 <button
                   onClick={() => handleSave(false)}
                   disabled={saving || !form.title}
