@@ -3,7 +3,7 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ReactQuill from "react-quill";
 import ImagePickerModal from "@/components/media/ImagePickerModal";
-import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter } from "lucide-react";
+import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search } from "lucide-react";
 
 export default function ArticleEditor() {
   const { id } = useParams();
@@ -11,17 +11,20 @@ export default function ArticleEditor() {
   const { user } = useOutletContext();
   const isNew = !id || id === "new";
 
-  const [categories, setCategories] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
   const [form, setForm] = useState({
-    title: "", slug: "", excerpt: "", body: "", category: "",
+    title: "", slug: "", excerpt: "", body: "",
+    category: "", categories: [],
     featured_image: "", status: "draft",
+    published_date: "", seo_title: "", seo_description: "",
   });
   const [saving, setSaving] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [loading, setLoading] = useState(!isNew);
+  const [catSearch, setCatSearch] = useState("");
 
   useEffect(() => {
-    base44.entities.Category.list("sort_order", 20).then(setCategories);
+    base44.entities.Category.list("sort_order", 200).then(setAllCategories);
     if (!isNew) {
       base44.entities.Article.filter({ id }).then(arts => {
         if (arts.length) {
@@ -32,8 +35,12 @@ export default function ArticleEditor() {
             excerpt: a.excerpt || "",
             body: a.body || "",
             category: a.category || "",
+            categories: a.categories || (a.category ? [a.category] : []),
             featured_image: a.featured_image || "",
             status: a.status || "draft",
+            published_date: a.published_date || "",
+            seo_title: a.seo_title || "",
+            seo_description: a.seo_description || "",
           });
         }
         setLoading(false);
@@ -46,7 +53,17 @@ export default function ArticleEditor() {
 
   const handleTitleChange = (e) => {
     const title = e.target.value;
-    setForm(f => ({ ...f, title, slug: isNew ? generateSlug(title) : f.slug }));
+    setForm(f => ({ ...f, title, slug: generateSlug(title) }));
+  };
+
+  const toggleCategory = (catName) => {
+    setForm(f => {
+      const exists = f.categories.includes(catName);
+      const updated = exists
+        ? f.categories.filter(c => c !== catName)
+        : [...f.categories, catName];
+      return { ...f, categories: updated, category: updated[0] || "" };
+    });
   };
 
   const handleSave = async (publish = false) => {
@@ -62,10 +79,9 @@ export default function ArticleEditor() {
     if (isNew) {
       const created = await base44.entities.Article.create(data);
       if (publish) {
-        // Trigger tweet
         base44.functions.invoke("autoTweetArticle", { articleId: created.id }).catch(() => {});
       }
-      navigate(`/admin/articles`);
+      navigate("/admin/articles");
     } else {
       await base44.entities.Article.update(id, data);
       if (publish && data.status === "published") {
@@ -75,6 +91,25 @@ export default function ArticleEditor() {
     }
     setSaving(false);
   };
+
+  // Build flat category list with colours, showing hierarchy
+  const topLevel = allCategories.filter(c => !c.parent_id);
+  const getSubs = (parentId) => allCategories.filter(c => c.parent_id === parentId);
+
+  const flattenedCats = [];
+  topLevel.forEach(top => {
+    flattenedCats.push({ ...top, _depth: 0 });
+    getSubs(top.id).forEach(sub => {
+      flattenedCats.push({ ...sub, _depth: 1, _parentColor: top.color });
+      getSubs(sub.id).forEach(subsub => {
+        flattenedCats.push({ ...subsub, _depth: 2, _parentColor: top.color });
+      });
+    });
+  });
+
+  const filteredCats = catSearch
+    ? flattenedCats.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase()))
+    : flattenedCats;
 
   if (loading) {
     return <div className="flex justify-center py-24"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
@@ -90,6 +125,24 @@ export default function ArticleEditor() {
         <h1 className="font-oswald font-bold text-white text-2xl uppercase">
           {isNew ? "New Article" : "Edit Article"}
         </h1>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => handleSave(false)}
+            disabled={saving || !form.title}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded text-foreground font-inter text-sm hover:border-primary transition-colors disabled:opacity-40"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Draft
+          </button>
+          <button
+            onClick={() => handleSave(true)}
+            disabled={saving || !form.title || form.categories.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-oswald font-semibold tracking-wider uppercase text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-40"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            Publish
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -108,22 +161,27 @@ export default function ArticleEditor() {
 
           {/* Slug */}
           <div>
-            <label className="block font-inter text-sm font-medium text-foreground mb-1.5">URL Slug</label>
-            <input
-              value={form.slug}
-              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-              placeholder="url-slug"
-              className="w-full bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-            />
+            <label className="block font-inter text-sm font-medium text-foreground mb-1.5">
+              URL Slug <span className="text-muted-foreground text-xs">(auto-generated from title)</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground font-inter text-sm shrink-0">/article/</span>
+              <input
+                value={form.slug}
+                onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
+                placeholder="url-slug"
+                className="flex-1 bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              />
+            </div>
           </div>
 
           {/* Excerpt */}
           <div>
-            <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Excerpt</label>
+            <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Excerpt <span className="text-muted-foreground text-xs">(shown on article cards)</span></label>
             <textarea
               value={form.excerpt}
               onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))}
-              placeholder="Short summary (shown in article cards)..."
+              placeholder="Short summary..."
               rows={2}
               className="w-full bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
             />
@@ -141,50 +199,145 @@ export default function ArticleEditor() {
               />
             </div>
           </div>
+
+          {/* SEO */}
+          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+            <h3 className="font-oswald font-bold text-white text-base uppercase flex items-center gap-2">
+              <Search className="w-4 h-4 text-accent" /> SEO / Meta
+            </h3>
+            <div>
+              <label className="block font-inter text-xs font-medium text-muted-foreground mb-1">Meta Title <span className="text-muted-foreground">(defaults to headline)</span></label>
+              <input
+                value={form.seo_title}
+                onChange={e => setForm(f => ({ ...f, seo_title: e.target.value }))}
+                placeholder={form.title || "SEO title..."}
+                className="w-full bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block font-inter text-xs font-medium text-muted-foreground mb-1">Meta Description</label>
+              <textarea
+                value={form.seo_description}
+                onChange={e => setForm(f => ({ ...f, seo_description: e.target.value }))}
+                placeholder="SEO description (150-160 characters recommended)..."
+                rows={2}
+                maxLength={160}
+                className="w-full bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
+              />
+              <div className="text-right text-xs text-muted-foreground mt-1">{form.seo_description.length}/160</div>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-5">
-          {/* Publish Box */}
+          {/* Publish */}
           <div className="bg-card border border-border rounded-xl p-5">
             <h3 className="font-oswald font-bold text-white text-base uppercase mb-4">Publish</h3>
             <div className="space-y-3">
-              <button
-                onClick={() => handleSave(false)}
-                disabled={saving || !form.title}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-secondary border border-border rounded text-foreground font-inter text-sm hover:border-primary transition-colors disabled:opacity-40"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save Draft
-              </button>
-              <button
-                onClick={() => handleSave(true)}
-                disabled={saving || !form.title || !form.category}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white font-oswald font-semibold tracking-wider uppercase text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-40"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                Publish
-              </button>
+              <div>
+                <label className="block font-inter text-xs font-medium text-muted-foreground mb-1">Publish Date</label>
+                <input
+                  type="datetime-local"
+                  value={form.published_date ? form.published_date.slice(0, 16) : ""}
+                  onChange={e => setForm(f => ({ ...f, published_date: e.target.value ? new Date(e.target.value).toISOString() : "" }))}
+                  className="w-full bg-secondary border border-border rounded px-3 py-2 text-foreground font-inter text-sm focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div className="border-t border-border pt-3 space-y-2">
+                <button
+                  onClick={() => handleSave(false)}
+                  disabled={saving || !form.title}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-secondary border border-border rounded text-foreground font-inter text-sm hover:border-primary transition-colors disabled:opacity-40"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Draft
+                </button>
+                <button
+                  onClick={() => handleSave(true)}
+                  disabled={saving || !form.title || form.categories.length === 0}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white font-oswald font-semibold tracking-wider uppercase text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-40"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Publish
+                </button>
+              </div>
             </div>
             <p className="text-muted-foreground font-inter text-xs mt-3 flex items-center gap-1">
-              <Twitter className="w-3 h-3" />
-              Auto-tweets on publish
+              <Twitter className="w-3 h-3" /> Auto-tweets on publish
             </p>
           </div>
 
-          {/* Category */}
+          {/* Categories — multi-select */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="font-oswald font-bold text-white text-base uppercase mb-3">Category *</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setForm(f => ({ ...f, category: cat.name }))}
-                  className={`px-3 py-2 rounded text-xs font-oswald font-semibold uppercase tracking-wider transition-colors ${form.category === cat.name ? "bg-primary text-white" : "bg-secondary text-muted-foreground hover:text-white border border-border hover:border-primary"}`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+            <h3 className="font-oswald font-bold text-white text-base uppercase mb-1 flex items-center gap-2">
+              <Tag className="w-4 h-4 text-accent" /> Categories *
+            </h3>
+            <p className="text-muted-foreground font-inter text-xs mb-3">Select one or more</p>
+
+            {/* Selected badges */}
+            {form.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {form.categories.map(catName => {
+                  const cat = allCategories.find(c => c.name === catName);
+                  const color = cat?.color || "#CC0000";
+                  return (
+                    <button
+                      key={catName}
+                      onClick={() => toggleCategory(catName)}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-oswald font-semibold uppercase"
+                      style={{ backgroundColor: `${color}25`, color, border: `1px solid ${color}60` }}
+                    >
+                      {catName} <X className="w-3 h-3" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Search */}
+            <input
+              value={catSearch}
+              onChange={e => setCatSearch(e.target.value)}
+              placeholder="Search categories..."
+              className="w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-2 transition-colors"
+            />
+
+            {/* Category list */}
+            <div className="max-h-56 overflow-y-auto space-y-0.5 pr-1">
+              {filteredCats.map(cat => {
+                const selected = form.categories.includes(cat.name);
+                const color = cat.color || cat._parentColor || "#CC0000";
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.name)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded text-left transition-colors ${selected ? "bg-secondary/80" : "hover:bg-secondary/40"}`}
+                    style={{ paddingLeft: `${12 + cat._depth * 14}px` }}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span
+                      className={`font-oswald text-xs font-semibold uppercase flex-1 ${selected ? "" : "text-muted-foreground"}`}
+                      style={selected ? { color } : {}}
+                    >
+                      {cat.name}
+                    </span>
+                    {selected && (
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: color }}>
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+              {filteredCats.length === 0 && (
+                <p className="text-muted-foreground font-inter text-xs text-center py-4">No categories found</p>
+              )}
             </div>
           </div>
 

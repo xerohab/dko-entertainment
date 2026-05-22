@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, Edit2, Check, X, Loader2, ChevronRight, FolderOpen, Folder } from "lucide-react";
+import CategoryColorPicker, { PRESET_COLORS } from "@/components/categories/CategoryColorPicker";
 
 export default function CategoriesManager() {
   const { user } = useOutletContext();
@@ -12,8 +13,10 @@ export default function CategoriesManager() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(null);
   const [editName, setEditName] = useState("");
-  const [adding, setAdding] = useState(null); // null | "root" | parentId
+  const [editColor, setEditColor] = useState(PRESET_COLORS[0].value);
+  const [adding, setAdding] = useState(null);
   const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(PRESET_COLORS[0].value);
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
@@ -37,11 +40,13 @@ export default function CategoriesManager() {
     await base44.entities.Category.create({
       name: newName.trim(),
       slug: generateSlug(newName.trim()),
+      color: newColor,
       parent_id: parentId || null,
       level,
       sort_order: categories.filter(c => c.parent_id === parentId).length,
     });
     setNewName("");
+    setNewColor(PRESET_COLORS[0].value);
     setAdding(null);
     setSaving(false);
     load();
@@ -53,6 +58,7 @@ export default function CategoriesManager() {
     await base44.entities.Category.update(cat.id, {
       name: editName.trim(),
       slug: generateSlug(editName.trim()),
+      color: editColor,
     });
     setEditing(null);
     setSaving(false);
@@ -65,7 +71,6 @@ export default function CategoriesManager() {
       ? `Delete "${cat.name}" and its ${children.length} sub-categor${children.length === 1 ? "y" : "ies"}? This cannot be undone.`
       : `Delete category "${cat.name}"?`;
     if (!confirm(msg)) return;
-    // Delete all children recursively
     const toDelete = [cat.id];
     const addChildren = (id) => {
       categories.filter(c => c.parent_id === id).forEach(c => {
@@ -80,32 +85,39 @@ export default function CategoriesManager() {
     setCategories(prev => prev.filter(c => !toDelete.includes(c.id)));
   };
 
-  // Build tree
   const roots = categories.filter(c => !c.parent_id);
 
   const renderAddForm = (parentId) => (
-    <div className="flex items-center gap-2 mt-1 pl-2">
-      <input
-        autoFocus
-        value={newName}
-        onChange={e => setNewName(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter") handleAdd(parentId); if (e.key === "Escape") { setAdding(null); setNewName(""); } }}
-        placeholder="Category name..."
-        className="flex-1 bg-background border border-primary rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none"
-      />
-      <button onClick={() => handleAdd(parentId)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-      </button>
-      <button onClick={() => { setAdding(null); setNewName(""); }} className="p-1.5 text-muted-foreground hover:text-white">
-        <X className="w-4 h-4" />
-      </button>
+    <div className="space-y-2 mt-1">
+      <div className="flex items-center gap-2">
+        <input
+          autoFocus
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") handleAdd(parentId); if (e.key === "Escape") { setAdding(null); setNewName(""); } }}
+          placeholder="Category name..."
+          className="flex-1 bg-background border border-primary rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none"
+        />
+        <button onClick={() => handleAdd(parentId)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+        </button>
+        <button onClick={() => { setAdding(null); setNewName(""); }} className="p-1.5 text-muted-foreground hover:text-white">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground font-inter shrink-0">Colour:</span>
+        <CategoryColorPicker value={newColor} onChange={setNewColor} />
+        <div className="w-5 h-5 rounded-full shrink-0 border border-border/50" style={{ backgroundColor: newColor }} />
+      </div>
     </div>
   );
 
   const renderCategory = (cat, depth = 0) => {
     const children = categories.filter(c => c.parent_id === cat.id);
     const indent = depth * 20;
-    const canAddChild = depth < 2; // max 3 levels: root → sub → sub-sub
+    const canAddChild = depth < 2;
+    const catColor = cat.color || "#CC0000";
 
     return (
       <div key={cat.id}>
@@ -113,7 +125,6 @@ export default function CategoriesManager() {
           className="flex items-center gap-2 px-4 py-3 hover:bg-secondary/30 transition-colors border-b border-border/50 group"
           style={{ paddingLeft: `${16 + indent}px` }}
         >
-          {/* Indent indicator */}
           {depth > 0 && (
             <div className="flex items-center gap-1 shrink-0">
               {Array.from({ length: depth }).map((_, i) => (
@@ -123,52 +134,61 @@ export default function CategoriesManager() {
             </div>
           )}
 
-          <div className="shrink-0">
-            {children.length > 0
-              ? <FolderOpen className="w-4 h-4 text-primary" />
-              : <Folder className="w-4 h-4 text-muted-foreground" />
-            }
-          </div>
+          <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: catColor }} />
 
           {editing === cat.id ? (
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                autoFocus
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleEdit(cat); if (e.key === "Escape") setEditing(null); }}
-                className="flex-1 bg-secondary border border-primary rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none"
-              />
-              <button onClick={() => handleEdit(cat)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
-                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              </button>
-              <button onClick={() => setEditing(null)} className="p-1.5 text-muted-foreground hover:text-white">
-                <X className="w-3.5 h-3.5" />
-              </button>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleEdit(cat); if (e.key === "Escape") setEditing(null); }}
+                  className="flex-1 bg-secondary border border-primary rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none"
+                />
+                <button onClick={() => handleEdit(cat)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button onClick={() => setEditing(null)} className="p-1.5 text-muted-foreground hover:text-white">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-inter shrink-0">Colour:</span>
+                <CategoryColorPicker value={editColor} onChange={setEditColor} />
+              </div>
             </div>
           ) : (
             <>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-oswald font-bold text-white text-sm uppercase">{cat.name}</span>
+                  <span
+                    className="font-oswald font-bold text-sm uppercase px-2 py-0.5 rounded"
+                    style={{ color: catColor, backgroundColor: `${catColor}20` }}
+                  >
+                    {cat.name}
+                  </span>
                   {depth === 0 && <span className="text-xs font-inter text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">Top Level</span>}
-                  {depth === 1 && <span className="text-xs font-inter text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">Sub</span>}
-                  {depth === 2 && <span className="text-xs font-inter text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">Sub-Sub</span>}
+                  {depth === 1 && <span className="text-xs font-inter text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded">Sub</span>}
+                  {depth === 2 && <span className="text-xs font-inter text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded">Sub-Sub</span>}
                 </div>
-                <div className="text-muted-foreground font-inter text-xs">/category/{cat.slug}</div>
+                <div className="text-muted-foreground font-inter text-xs mt-0.5">/category/{cat.slug}</div>
               </div>
 
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 {canAddChild && (
                   <button
-                    onClick={() => { setAdding(cat.id); setNewName(""); }}
+                    onClick={() => { setAdding(cat.id); setNewName(""); setNewColor(catColor); }}
                     className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-primary font-inter transition-colors rounded hover:bg-secondary"
                     title="Add sub-category"
                   >
                     <Plus className="w-3 h-3" /> Sub
                   </button>
                 )}
-                <button onClick={() => { setEditing(cat.id); setEditName(cat.name); }} className="p-1.5 text-muted-foreground hover:text-primary transition-colors">
+                <button
+                  onClick={() => { setEditing(cat.id); setEditName(cat.name); setEditColor(cat.color || PRESET_COLORS[0].value); }}
+                  className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => handleDelete(cat)} className="p-1.5 text-muted-foreground hover:text-red-400 transition-colors">
@@ -180,7 +200,7 @@ export default function CategoriesManager() {
         </div>
 
         {adding === cat.id && (
-          <div style={{ paddingLeft: `${16 + indent + 20}px` }} className="py-2 pr-4 bg-secondary/20 border-b border-border/50">
+          <div style={{ paddingLeft: `${16 + indent + 20}px` }} className="py-3 pr-4 bg-secondary/20 border-b border-border/50">
             {renderAddForm(cat.id)}
           </div>
         )}
@@ -198,19 +218,12 @@ export default function CategoriesManager() {
           <p className="text-muted-foreground font-inter text-sm mt-0.5">Hierarchical category management (up to 3 levels)</p>
         </div>
         <button
-          onClick={() => { setAdding("root"); setNewName(""); }}
+          onClick={() => { setAdding("root"); setNewName(""); setNewColor(PRESET_COLORS[0].value); }}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-oswald font-semibold text-sm tracking-wider uppercase rounded hover:bg-red-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Top-Level
         </button>
-      </div>
-
-      {/* Level Legend */}
-      <div className="flex items-center gap-4 mb-4 px-2">
-        <span className="text-xs font-inter text-muted-foreground flex items-center gap-1.5"><span className="bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">Top Level</span> e.g. Promotions</span>
-        <span className="text-xs font-inter text-muted-foreground flex items-center gap-1.5"><span className="bg-blue-500/10 px-1.5 py-0.5 rounded text-blue-400">Sub</span> e.g. WWE</span>
-        <span className="text-xs font-inter text-muted-foreground flex items-center gap-1.5"><span className="bg-green-500/10 px-1.5 py-0.5 rounded text-green-400">Sub-Sub</span> e.g. RAW</span>
       </div>
 
       {adding === "root" && (
