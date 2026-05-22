@@ -1,11 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight, UserCircle } from "lucide-react";
+import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight, UserCircle, MessageCircle, TrendingUp, Crown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/articles", label: "Articles", icon: FileText },
   { to: "/admin/media", label: "Media Library", icon: Image },
+  { to: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { to: "/admin/comments", label: "Comments", icon: MessageCircle },
+  { to: "/admin/subscriptions", label: "Subscriptions", icon: Crown, adminOnly: true },
   { to: "/admin/categories", label: "Categories", icon: Tag, adminOnly: true },
   { to: "/admin/users", label: "Users", icon: Users, adminOnly: true },
   { to: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },

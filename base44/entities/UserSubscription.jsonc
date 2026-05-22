@@ -1,0 +1,40 @@
+{
+  "name": "UserSubscription",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "plan_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "paypal_subscription_id": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "plan_id"
+  ]
+}

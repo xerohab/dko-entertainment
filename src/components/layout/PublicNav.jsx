@@ -201,6 +201,9 @@ export default function PublicNav() {
                 <Search className="w-5 h-5" />
               </button>
             )}
+            <Link to="/pricing" className="hidden md:inline-flex px-3 py-1.5 bg-accent/10 border border-accent/40 text-accent font-oswald text-xs font-medium tracking-wider uppercase rounded hover:bg-accent/20 transition-colors">
+              MEMBERSHIP
+            </Link>
             <Link to="/admin" className="hidden md:inline-flex px-3 py-1.5 bg-primary text-white font-oswald text-xs font-medium tracking-wider uppercase rounded hover:bg-red-700 transition-colors">
               ADMIN
             </Link>
@@ -215,6 +218,7 @@ export default function PublicNav() {
           <nav className="md:hidden border-t border-border py-3 flex flex-col">
             <Link to="/" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>HOME</Link>
             {renderMobileTree(topLevel)}
+            <Link to="/pricing" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-accent" onClick={() => setMobileOpen(false)}>MEMBERSHIP</Link>
             <Link to="/admin" className="px-4 py-2 mt-1 font-oswald font-medium text-sm tracking-wider uppercase text-primary" onClick={() => setMobileOpen(false)}>ADMIN PANEL</Link>
           </nav>
         )}

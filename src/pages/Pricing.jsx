@@ -1,0 +1,130 @@
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import PublicNav from "@/components/layout/PublicNav";
+import { Check, Crown, Loader2, Star } from "lucide-react";
+
+export default function Pricing() {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      base44.entities.SubscriptionPlan.filter({ is_active: true }, "sort_order", 10),
+    ]).then(([p]) => {
+      setPlans(p);
+      setLoading(false);
+    });
+    base44.auth.isAuthenticated().then(async authed => {
+      if (authed) {
+        const me = await base44.auth.me();
+        setUser(me);
+        const subs = await base44.entities.UserSubscription.filter({ user_email: me.email, status: "active" });
+        if (subs.length) setSubscription(subs[0]);
+      }
+    });
+  }, []);
+
+  const handleSubscribe = (plan) => {
+    if (!plan.paypal_plan_id) {
+      alert("PayPal plan not configured yet. Please check back soon.");
+      return;
+    }
+    if (!user) {
+      base44.auth.redirectToLogin("/pricing");
+      return;
+    }
+    // Redirect to PayPal
+    window.open(`https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${plan.paypal_plan_id}`, "_blank");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <PublicNav />
+
+      <main className="max-w-5xl mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/30 text-accent font-oswald text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4">
+            <Crown className="w-3.5 h-3.5" /> Membership Plans
+          </div>
+          <h1 className="font-oswald font-bold text-white text-4xl md:text-5xl uppercase leading-tight mb-4">
+            Join the <span className="text-primary">DKO</span> Inner Circle
+          </h1>
+          <p className="text-muted-foreground font-inter text-lg max-w-xl mx-auto">
+            Get exclusive access, ad-free experience, and support your favourite wrestling news platform.
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>
+        ) : plans.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground font-inter">No plans available yet. Check back soon!</div>
+        ) : (
+          <div className={`grid gap-6 ${plans.length === 1 ? "max-w-sm mx-auto" : plans.length === 2 ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
+            {plans.map(plan => {
+              const isSubscribed = subscription?.plan_id === plan.id;
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative bg-card rounded-2xl p-7 flex flex-col border-2 transition-all ${
+                    plan.highlight
+                      ? "border-accent shadow-2xl shadow-accent/10 scale-105"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  {plan.highlight && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-accent text-black font-oswald font-bold text-xs px-4 py-1 rounded-full uppercase tracking-wider">
+                      <Star className="w-3 h-3" /> Most Popular
+                    </div>
+                  )}
+
+                  <div className="mb-5">
+                    <h3 className="font-oswald font-bold text-white text-xl uppercase mb-1">{plan.name}</h3>
+                    {plan.description && <p className="text-muted-foreground font-inter text-sm">{plan.description}</p>}
+                  </div>
+
+                  <div className="mb-6">
+                    <span className={`font-oswald font-bold text-4xl ${plan.highlight ? "text-accent" : "text-white"}`}>
+                      £{plan.price}
+                    </span>
+                    <span className="text-muted-foreground font-inter text-sm">/{plan.interval}</span>
+                  </div>
+
+                  {plan.features?.length > 0 && (
+                    <ul className="space-y-2.5 mb-8 flex-1">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-foreground font-inter text-sm">
+                          <Check className={`w-4 h-4 shrink-0 mt-0.5 ${plan.highlight ? "text-accent" : "text-primary"}`} />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <button
+                    onClick={() => !isSubscribed && handleSubscribe(plan)}
+                    className={`w-full py-3 font-oswald font-bold text-sm tracking-wider uppercase rounded-lg transition-all ${
+                      isSubscribed
+                        ? "bg-green-500/10 text-green-400 border border-green-500/30 cursor-default"
+                        : plan.highlight
+                        ? "bg-accent text-black hover:brightness-110"
+                        : "bg-primary text-white hover:bg-red-700"
+                    }`}
+                  >
+                    {isSubscribed ? "✓ Current Plan" : "Subscribe via PayPal"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="text-center text-muted-foreground font-inter text-xs mt-10">
+          Secure payments powered by PayPal. Cancel anytime.
+        </p>
+      </main>
+    </div>
+  );
+}

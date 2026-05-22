@@ -1,0 +1,24 @@
+{
+  "name": "ArticleView",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string"
+    },
+    "article_title": {
+      "type": "string"
+    },
+    "article_slug": {
+      "type": "string"
+    },
+    "viewer_ip": {
+      "type": "string"
+    },
+    "referrer": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "article_id"
+  ]
+}

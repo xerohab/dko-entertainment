@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import CategoryPage from './pages/CategoryPage';
 import ArticlePage from './pages/ArticlePage';
 import SearchPage from './pages/SearchPage';
+import Pricing from './pages/Pricing';
 
 // Admin layout + pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -22,6 +23,9 @@ import CategoriesManager from './pages/admin/CategoriesManager';
 import UsersManager from './pages/admin/UsersManager';
 import SiteSettings from './pages/admin/SiteSettings';
 import UserProfile from './pages/admin/UserProfile';
+import CommentsManager from './pages/admin/CommentsManager';
+import SubscriptionsManager from './pages/admin/SubscriptionsManager';
+import ArticleAnalytics from './pages/admin/ArticleAnalytics';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +54,7 @@ const AuthenticatedApp = () => {
       <Route path="/category/:slug" element={<CategoryPage />} />
       <Route path="/article/:slug" element={<ArticlePage />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/pricing" element={<Pricing />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
@@ -63,6 +68,9 @@ const AuthenticatedApp = () => {
         <Route path="users/:id" element={<UserProfile />} />
         <Route path="settings" element={<SiteSettings />} />
         <Route path="profile" element={<UserProfile />} />
+        <Route path="comments" element={<CommentsManager />} />
+        <Route path="subscriptions" element={<SubscriptionsManager />} />
+        <Route path="analytics" element={<ArticleAnalytics />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

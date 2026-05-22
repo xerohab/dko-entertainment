@@ -1,0 +1,48 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "article_id": {
+      "type": "string",
+      "description": "ID of the article"
+    },
+    "article_title": {
+      "type": "string",
+      "description": "Article title for reference"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Commenter's display name"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Commenter's email"
+    },
+    "author_avatar": {
+      "type": "string",
+      "description": "Commenter's avatar URL"
+    },
+    "body": {
+      "type": "string",
+      "description": "Comment text"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "approved"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User ID if logged in"
+    }
+  },
+  "required": [
+    "article_id",
+    "body",
+    "author_name"
+  ]
+}
