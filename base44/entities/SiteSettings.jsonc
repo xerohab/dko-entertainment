@@ -1,0 +1,22 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Setting key"
+    },
+    "value": {
+      "type": "string",
+      "description": "Setting value (encrypted for secrets)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    }
+  },
+  "required": [
+    "key",
+    "value"
+  ]
+}

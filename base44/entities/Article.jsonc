@@ -1,0 +1,60 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article headline"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly slug"
+    },
+    "body": {
+      "type": "string",
+      "description": "Rich text HTML body"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "Short excerpt/summary"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category name"
+    },
+    "featured_image": {
+      "type": "string",
+      "description": "Featured image URL"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Author display name"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Author email"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft"
+    },
+    "published_date": {
+      "type": "string",
+      "description": "ISO date of publication"
+    },
+    "tweeted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether auto-tweet was sent"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "status"
+  ]
+}

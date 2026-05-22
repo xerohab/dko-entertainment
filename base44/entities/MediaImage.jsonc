@@ -1,0 +1,25 @@
+{
+  "name": "MediaImage",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Image title or alt text"
+    },
+    "url": {
+      "type": "string",
+      "description": "Public image URL"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "Uploader email"
+    },
+    "file_size": {
+      "type": "string",
+      "description": "Human-readable file size"
+    }
+  },
+  "required": [
+    "url"
+  ]
+}

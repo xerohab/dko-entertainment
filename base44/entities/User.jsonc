@@ -1,0 +1,28 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "editor",
+        "user"
+      ],
+      "default": "user",
+      "description": "User role in the system"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Public byline name"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Short author bio"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Profile image URL"
+    }
+  }
+}
