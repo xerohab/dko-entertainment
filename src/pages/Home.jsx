@@ -37,8 +37,9 @@ export default function Home() {
       );
     }
     if (catVal) {
+      const cat = categories.find(c => c.id === catVal);
       filtered = filtered.filter(a =>
-        a.categories?.includes(catVal) || a.category === catVal
+        a.categories?.includes(cat?.name) || a.category === cat?.name
       );
     }
     const total = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -108,7 +109,7 @@ export default function Home() {
               All
             </button>
             {topLevel.map(cat => {
-              const isSelected = selectedCategory === cat.name;
+              const isSelected = selectedCategory === cat.id;
               const bgColor = cat.color || "#CC0000";
               // Determine if color is light (use black text) or dark (use white text)
               const hex = bgColor.replace("#", "");
@@ -119,8 +120,8 @@ export default function Home() {
               const textColor = luminance > 0.5 ? "#000000" : "#ffffff";
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => handleCategory(cat.name)}
+                   key={cat.id}
+                   onClick={() => handleCategory(cat.id)}
                   className={`shrink-0 px-3 py-1.5 rounded font-oswald text-xs uppercase tracking-wider transition-colors ${
                     isSelected ? "" : "bg-secondary text-muted-foreground hover:text-white"
                   }`}
