@@ -13,6 +13,7 @@ import ArticlePage from './pages/ArticlePage';
 import SearchPage from './pages/SearchPage';
 import Pricing from './pages/Pricing';
 import SavedArticles from './pages/SavedArticles';
+import MyProfile from './pages/MyProfile';
 
 // Admin layout + pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
       <Route path="/search" element={<SearchPage />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/saved" element={<SavedArticles />} />
+      <Route path="/profile" element={<MyProfile />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
