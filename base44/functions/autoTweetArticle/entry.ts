@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     // Build tweet text
     const articleUrl = `${Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app'}/article/${article.slug || article.id}`;
-    const tweetText = `${article.title}\n\n${articleUrl}`;
+    const tweetText = `${article.title}\n\n${articleUrl} #DKOWrestling`;
 
     // OAuth 1.0a signing
     const oauth = new OAuth({
