@@ -28,8 +28,15 @@ export default function ImageUploader({ onUpload, compact = false }) {
     setUploading(true);
     setError(null);
     for (const file of validFiles) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      onUpload(file_url);
+      try {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        onUpload(file_url);
+        // Add 500ms delay between uploads to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (err) {
+        setError(`Failed to upload ${file.name}`);
+        break;
+      }
     }
     setUploading(false);
   };
