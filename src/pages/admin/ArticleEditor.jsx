@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import ReactQuill from "react-quill";
+import RichEditor from "@/components/editor/RichEditor";
 import ImagePickerModal from "@/components/media/ImagePickerModal";
 import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search } from "lucide-react";
 
@@ -190,14 +190,11 @@ export default function ArticleEditor() {
           {/* Body */}
           <div>
             <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Article Body *</label>
-            <div className="rounded-lg overflow-hidden border border-border [&_.ql-toolbar]:bg-secondary [&_.ql-toolbar]:border-border [&_.ql-toolbar]:text-white [&_.ql-container]:bg-secondary [&_.ql-container]:border-border [&_.ql-editor]:text-white [&_.ql-editor]:min-h-[300px] [&_.ql-editor]:font-inter">
-              <ReactQuill
-                value={form.body}
-                onChange={v => setForm(f => ({ ...f, body: v }))}
-                placeholder="Write your article here..."
-                theme="snow"
-              />
-            </div>
+            <RichEditor
+              value={form.body}
+              onChange={v => setForm(f => ({ ...f, body: v }))}
+              placeholder="Write your article here..."
+            />
           </div>
 
           {/* SEO */}
