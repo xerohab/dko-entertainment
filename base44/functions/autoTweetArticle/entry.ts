@@ -63,21 +63,35 @@ Deno.serve(async (req) => {
 
     // Upload and attach featured image if exists
     if (article.featured_image) {
-      const imgRes = await fetch(article.featured_image);
-      const bytes = await imgRes.arrayBuffer();
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        
+        const imgRes = await fetch(article.featured_image, { signal: controller.signal });
+        const bytes = await imgRes.arrayBuffer();
+        const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+        clearTimeout(timeout);
 
-      const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
-      const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { Authorization: uploadAuth['Authorization'] },
-        body: new URLSearchParams({ media_data: b64 }),
-      });
+        const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
+        const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
+        
+        const controller2 = new AbortController();
+        const timeout2 = setTimeout(() => controller2.abort(), 15000);
+        
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { Authorization: uploadAuth['Authorization'] },
+          body: new URLSearchParams({ media_data: b64 }),
+          signal: controller2.signal,
+        });
+        clearTimeout(timeout2);
 
-      const media = await uploadRes.json();
-      if (media.media_id) {
-        payload.media = { media_ids: [media.media_id.toString()] };
+        const media = await uploadRes.json();
+        if (media.media_id) {
+          payload.media = { media_ids: [media.media_id.toString()] };
+        }
+      } catch (imgErr) {
+        console.warn('Image upload skipped:', imgErr.message);
       }
     }
 
