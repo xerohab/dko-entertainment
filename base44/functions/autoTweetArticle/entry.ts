@@ -72,7 +72,14 @@ Deno.serve(async (req) => {
         const bytes = await imgRes.arrayBuffer();
         clearTimeout(timeout);
 
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes.slice(0, 5242880))));
+        // Convert to base64 in chunks to avoid stack overflow
+        const uint8 = new Uint8Array(bytes.slice(0, 5242880));
+        let b64 = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8.length; i += chunkSize) {
+          b64 += String.fromCharCode(...uint8.slice(i, i + chunkSize));
+        }
+        b64 = btoa(b64);
 
         const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
         const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
