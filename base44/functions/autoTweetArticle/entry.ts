@@ -41,10 +41,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Twitter credentials not configured' }, { status: 400 });
     }
 
-    // Build tweet text with article name, image URL, and link
+    // Build tweet text
     const articleUrl = `${Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app'}/article/${article.slug || article.id}`;
-    const imageText = article.featured_image ? `\n\n${article.featured_image}` : '';
-    const tweetText = `${article.title}${imageText}\n\n${articleUrl}`;
+    const tweetText = `${article.title}\n\n${articleUrl}`;
 
     // OAuth 1.0a signing
     const oauth = new OAuth({
@@ -59,13 +58,35 @@ Deno.serve(async (req) => {
     const token = { key: accessToken, secret: accessSecret };
     const authHeader = oauth.toHeader(oauth.authorize({ url, method: 'POST' }, token));
 
+    const payload = { text: tweetText };
+
+    // Upload and attach featured image if exists
+    if (article.featured_image) {
+      const imgRes = await fetch(article.featured_image);
+      const bytes = await imgRes.arrayBuffer();
+      const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+
+      const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
+      const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { Authorization: uploadAuth['Authorization'] },
+        body: new URLSearchParams({ media_data: b64 }),
+      });
+
+      const media = await uploadRes.json();
+      if (media.media_id) {
+        payload.media = { media_ids: [media.media_id.toString()] };
+      }
+    }
+
     const tweetRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': authHeader['Authorization'],
       },
-      body: JSON.stringify({ text: tweetText.slice(0, 280) }),
+      body: JSON.stringify(payload),
     });
 
     const tweetData = await tweetRes.json();
