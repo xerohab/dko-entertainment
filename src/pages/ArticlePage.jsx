@@ -39,6 +39,14 @@ export default function ArticlePage() {
       if (arts.length) {
         const a = arts[0];
         setArticle(a);
+        
+        // Update page title and meta description
+        const pageTitle = a.seo_title || a.title;
+        const pageDescription = a.seo_description || a.excerpt || "Read more on DKO Wrestling";
+        document.title = `${pageTitle} | DKO Wrestling`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', pageDescription);
+        
         const [rel, vc, cc] = await Promise.all([
           base44.entities.Article.filter({ status: "published", category: a.category }, "-published_date", 4),
           base44.entities.ArticleView.filter({ article_id: a.id }),
