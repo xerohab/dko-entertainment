@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
     const payload = { text: tweetText };
 
     // Upload and attach featured image if exists
+    console.log('Article featured_image:', article.featured_image);
     if (article.featured_image) {
       try {
         const controller = new AbortController();
