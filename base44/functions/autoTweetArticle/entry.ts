@@ -100,11 +100,11 @@ Deno.serve(async (req) => {
 
         const media = await uploadRes.json();
         console.log('Twitter media upload response:', media);
-        if (media.media_id) {
-          console.log('Media ID set:', media.media_id);
-          payload.media = { media_ids: [media.media_id.toString()] };
+        if (media.media_id_string) {
+          console.log('Media ID set:', media.media_id_string);
+          payload.media = { media_ids: [media.media_id_string] };
         } else {
-          console.warn('No media_id in response:', media);
+          console.warn('No media_id_string in response:', media);
         }
       } catch (imgErr) {
         console.error('Image upload failed:', imgErr.message);
