@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import PublicNav from "@/components/layout/PublicNav";
 import ArticleCard from "@/components/articles/ArticleCard";
-import { Search, Filter, Loader2, ChevronDown } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 export default function Home() {
   const [articles, setArticles] = useState([]);
@@ -12,15 +12,15 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 12;
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     base44.entities.Category.list("sort_order", 200).then(setCategories).catch(() => {});
     loadArticles(1, "", "");
   }, []);
 
-  const loadArticles = async (pageNum, searchVal, catVal, replace = true) => {
+  const loadArticles = async (pageNum, searchVal, catVal) => {
     setLoading(true);
     const all = await base44.entities.Article.filter({ status: "published" }, "-published_date", 200);
     let filtered = all;
@@ -37,14 +37,11 @@ export default function Home() {
         a.categories?.includes(catVal) || a.category === catVal
       );
     }
-    const start = 0;
-    const end = pageNum * PAGE_SIZE;
-    setHasMore(end < filtered.length);
-    if (replace) {
-      setArticles(filtered.slice(start, end));
-    } else {
-      setArticles(filtered.slice(start, end));
-    }
+    const total = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    setTotalPages(total);
+    const start = (pageNum - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    setArticles(filtered.slice(start, end));
     setLoading(false);
   };
 
@@ -60,10 +57,10 @@ export default function Home() {
     loadArticles(1, search, cat);
   };
 
-  const handleLoadMore = () => {
-    const next = page + 1;
-    setPage(next);
-    loadArticles(next, search, selectedCategory);
+  const handlePageChange = (p) => {
+    setPage(p);
+    loadArticles(p, search, selectedCategory);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const topLevel = categories.filter(c => !c.parent_id);
@@ -158,16 +155,33 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Load More */}
-            {hasMore && (
-              <div className="flex justify-center mt-10">
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-10">
                 <button
-                  onClick={handleLoadMore}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-8 py-3 bg-secondary border border-border rounded-lg font-oswald text-sm uppercase tracking-wider text-foreground hover:border-primary transition-colors disabled:opacity-40"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="px-3 py-2 bg-secondary border border-border rounded font-oswald text-xs uppercase tracking-wider text-foreground hover:border-primary transition-colors disabled:opacity-30"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
-                  Load More
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => handlePageChange(p)}
+                    className={`w-9 h-9 rounded font-oswald text-sm font-bold transition-colors ${
+                      p === page ? "bg-primary text-white" : "bg-secondary border border-border text-foreground hover:border-primary"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="px-3 py-2 bg-secondary border border-border rounded font-oswald text-xs uppercase tracking-wider text-foreground hover:border-primary transition-colors disabled:opacity-30"
+                >
+                  Next
                 </button>
               </div>
             )}
