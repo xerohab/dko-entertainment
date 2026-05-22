@@ -96,11 +96,15 @@ Deno.serve(async (req) => {
         clearTimeout(timeout2);
 
         const media = await uploadRes.json();
+        console.log('Twitter media upload response:', media);
         if (media.media_id) {
+          console.log('Media ID set:', media.media_id);
           payload.media = { media_ids: [media.media_id.toString()] };
+        } else {
+          console.warn('No media_id in response:', media);
         }
       } catch (imgErr) {
-        console.warn('Image upload skipped:', imgErr.message);
+        console.error('Image upload failed:', imgErr.message);
       }
     }
 
