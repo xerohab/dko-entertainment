@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Menu, X, Search, ChevronDown } from "lucide-react";
+import { Menu, X, Search, ChevronDown, LogIn, LogOut, User, Shield } from "lucide-react";
 
 function NavDropdown({ cat, subs, location }) {
   const [open, setOpen] = useState(false);
@@ -103,16 +103,82 @@ function SubDropdownItem({ sub, allCats, location, onClose, grandchildren = [] }
   );
 }
 
+function UserMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const isAdmin = user.role === "admin";
+  const isEditor = user.role === "editor";
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-1.5 bg-secondary border border-border rounded hover:border-primary transition-colors"
+      >
+        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-oswald font-bold text-xs">
+          {user.full_name?.[0]?.toUpperCase() || "U"}
+        </div>
+        <span className="hidden sm:block font-oswald text-xs font-medium text-white uppercase tracking-wide max-w-24 truncate">
+          {user.full_name || user.email}
+        </span>
+        <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-black border border-border rounded-lg shadow-2xl shadow-black/50 min-w-48 z-50 py-1">
+          <div className="px-4 py-2 border-b border-border/50">
+            <p className="font-inter text-xs text-white font-medium truncate">{user.full_name || "Account"}</p>
+            <p className="font-inter text-xs text-muted-foreground truncate">{user.email}</p>
+            <span className={`inline-block mt-1 text-xs font-oswald font-semibold uppercase px-1.5 py-0.5 rounded ${
+              isAdmin ? "bg-primary/10 text-primary" :
+              isEditor ? "bg-blue-500/10 text-blue-400" :
+              "bg-secondary text-muted-foreground"
+            }`}>
+              {isAdmin ? "Admin" : isEditor ? "Editor" : "Member"}
+            </span>
+          </div>
+          {(isAdmin || isEditor) && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 font-oswald text-sm uppercase text-foreground hover:text-white hover:bg-secondary/50 transition-colors"
+            >
+              <Shield className="w-3.5 h-3.5" /> Admin Panel
+            </Link>
+          )}
+          <button
+            onClick={() => { setOpen(false); onLogout(); }}
+            className="w-full flex items-center gap-2 px-4 py-2 font-oswald text-sm uppercase text-muted-foreground hover:text-red-400 hover:bg-secondary/50 transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" /> Log Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PublicNav() {
   const [allCats, setAllCats] = useState([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     base44.entities.Category.list("sort_order", 200).then(setAllCats).catch(() => {});
+    base44.auth.isAuthenticated().then(authed => {
+      if (authed) base44.auth.me().then(setCurrentUser).catch(() => {});
+    });
   }, []);
 
   const topLevel = allCats.filter(c => !c.parent_id);
@@ -124,6 +190,10 @@ export default function PublicNav() {
       setSearchOpen(false);
       setSearchVal("");
     }
+  };
+
+  const handleLogout = () => {
+    base44.auth.logout(window.location.href);
   };
 
   const renderMobileTree = (cats, depth = 0) =>
@@ -204,9 +274,18 @@ export default function PublicNav() {
             <Link to="/pricing" className="hidden md:inline-flex px-3 py-1.5 bg-accent/10 border border-accent/40 text-accent font-oswald text-xs font-medium tracking-wider uppercase rounded hover:bg-accent/20 transition-colors">
               MEMBERSHIP
             </Link>
-            <Link to="/admin" className="hidden md:inline-flex px-3 py-1.5 bg-primary text-white font-oswald text-xs font-medium tracking-wider uppercase rounded hover:bg-red-700 transition-colors">
-              ADMIN
-            </Link>
+            {currentUser ? (
+              <div className="hidden md:block">
+                <UserMenu user={currentUser} onLogout={handleLogout} />
+              </div>
+            ) : (
+              <button
+                onClick={() => base44.auth.redirectToLogin(window.location.href)}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white font-oswald text-xs font-medium tracking-wider uppercase rounded hover:bg-red-700 transition-colors"
+              >
+                <LogIn className="w-3.5 h-3.5" /> LOGIN
+              </button>
+            )}
             <button className="md:hidden p-2 text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -219,7 +298,29 @@ export default function PublicNav() {
             <Link to="/" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-foreground hover:text-primary" onClick={() => setMobileOpen(false)}>HOME</Link>
             {renderMobileTree(topLevel)}
             <Link to="/pricing" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-accent" onClick={() => setMobileOpen(false)}>MEMBERSHIP</Link>
-            <Link to="/admin" className="px-4 py-2 mt-1 font-oswald font-medium text-sm tracking-wider uppercase text-primary" onClick={() => setMobileOpen(false)}>ADMIN PANEL</Link>
+            {currentUser ? (
+              <>
+                <div className="px-4 py-2 border-t border-border/50 mt-1">
+                  <p className="font-inter text-xs text-muted-foreground">{currentUser.email}</p>
+                  <p className="font-oswald text-sm font-bold text-white uppercase">{currentUser.full_name}</p>
+                </div>
+                {(currentUser.role === "admin" || currentUser.role === "editor") && (
+                  <Link to="/admin" className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-primary flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+                    <Shield className="w-4 h-4" /> ADMIN PANEL
+                  </Link>
+                )}
+                <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="px-4 py-2 font-oswald font-medium text-sm tracking-wider uppercase text-red-400 flex items-center gap-2">
+                  <LogOut className="w-4 h-4" /> LOG OUT
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setMobileOpen(false); base44.auth.redirectToLogin(window.location.href); }}
+                className="px-4 py-2 mt-1 font-oswald font-medium text-sm tracking-wider uppercase text-primary flex items-center gap-2"
+              >
+                <LogIn className="w-4 h-4" /> LOGIN
+              </button>
+            )}
           </nav>
         )}
       </div>
