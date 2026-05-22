@@ -68,10 +68,12 @@ Deno.serve(async (req) => {
         const timeout = setTimeout(() => controller.abort(), 10000);
         
         const imgRes = await fetch(article.featured_image, { signal: controller.signal });
-        const bytes = await imgRes.arrayBuffer();
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+        const blob = await imgRes.blob();
         clearTimeout(timeout);
 
+        const formData = new FormData();
+        formData.append('media_data', await blob.text());
+        
         const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
         const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST' }, token));
         
@@ -81,7 +83,7 @@ Deno.serve(async (req) => {
         const uploadRes = await fetch(uploadUrl, {
           method: 'POST',
           headers: { Authorization: uploadAuth['Authorization'] },
-          body: new URLSearchParams({ media_data: b64 }),
+          body: formData,
           signal: controller2.signal,
         });
         clearTimeout(timeout2);
