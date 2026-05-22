@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { UserPlus, Edit2, Loader2, Mail, ChevronDown } from "lucide-react";
+import { UserPlus, Edit2, Loader2, Mail, ChevronDown, Crown, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function UsersManager() {
@@ -13,11 +13,13 @@ export default function UsersManager() {
   const [inviteRole, setInviteRole] = useState("editor");
   const [inviting, setInviting] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
-
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [grantingPro, setGrantingPro] = useState(null);
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
     base44.entities.User.list("-created_date", 100).then(setUsers).finally(() => setLoading(false));
+    base44.entities.UserSubscription.filter({ status: "active" }).then(setSubscriptions);
   }, []);
 
   const handleInvite = async () => {
@@ -27,6 +29,33 @@ export default function UsersManager() {
     setInviteEmail("");
     setInviting(false);
     alert(`Invitation sent to ${inviteEmail.trim()} as ${inviteRole}`);
+  };
+
+  const hasProSub = (u) => subscriptions.some(s => s.user_email === u.email && s.status === "active");
+
+  const handleGrantPro = async (u) => {
+    setGrantingPro(u.id);
+    await base44.entities.UserSubscription.create({
+      user_email: u.email,
+      user_id: u.id,
+      plan_id: "admin_grant",
+      plan_name: "Pro (Admin Grant)",
+      status: "active",
+      start_date: new Date().toISOString(),
+    });
+    const updated = await base44.entities.UserSubscription.filter({ status: "active" });
+    setSubscriptions(updated);
+    setGrantingPro(null);
+  };
+
+  const handleRevokePro = async (u) => {
+    if (!window.confirm(`Revoke Pro access for ${u.full_name || u.email}?`)) return;
+    setGrantingPro(u.id);
+    const sub = subscriptions.find(s => s.user_email === u.email && s.status === "active");
+    if (sub) await base44.entities.UserSubscription.update(sub.id, { status: "cancelled" });
+    const updated = await base44.entities.UserSubscription.filter({ status: "active" });
+    setSubscriptions(updated);
+    setGrantingPro(null);
   };
 
   const roleColor = (role) => {
@@ -111,9 +140,16 @@ export default function UsersManager() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground font-inter text-sm hidden sm:table-cell">{u.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
-                        {u.role || "user"}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
+                          {u.role || "user"}
+                        </span>
+                        {hasProSub(u) && (
+                          <span className="text-xs font-oswald font-semibold px-2 py-0.5 rounded bg-accent/10 text-accent flex items-center gap-1">
+                            <Crown className="w-3 h-3" /> Pro
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <ChevronDown className={`w-4 h-4 text-muted-foreground inline-block transition-transform ${expandedId === u.id ? "rotate-180" : ""}`} />
@@ -137,6 +173,23 @@ export default function UsersManager() {
                           >
                             <Mail className="w-3.5 h-3.5" /> Email User
                           </a>
+                          {hasProSub(u) ? (
+                            <button
+                              onClick={e => { e.stopPropagation(); handleRevokePro(u); }}
+                              disabled={grantingPro === u.id}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-secondary border border-red-500/40 text-red-400 font-oswald text-xs font-semibold tracking-wider uppercase rounded hover:border-red-500 transition-colors disabled:opacity-40"
+                            >
+                              {grantingPro === u.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />} Revoke Pro
+                            </button>
+                          ) : (
+                            <button
+                              onClick={e => { e.stopPropagation(); handleGrantPro(u); }}
+                              disabled={grantingPro === u.id}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-accent/10 border border-accent/40 text-accent font-oswald text-xs font-semibold tracking-wider uppercase rounded hover:bg-accent/20 transition-colors disabled:opacity-40"
+                            >
+                              {grantingPro === u.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />} Grant Pro
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
