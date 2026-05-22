@@ -5,6 +5,7 @@ import PublicNav from "@/components/layout/PublicNav";
 import ArticleCard from "@/components/articles/ArticleCard";
 import CommentsSection from "@/components/article/CommentsSection";
 import AdBanner from "@/components/ads/AdBanner";
+import AuthorBio from "@/components/articles/AuthorBio";
 import { format } from "date-fns";
 import { Loader2, User, Calendar, Eye, MessageCircle, Bookmark, BookmarkCheck } from "lucide-react";
 
@@ -209,6 +210,9 @@ export default function ArticlePage() {
 
         {/* Mid Ad */}
         <AdBanner slot="mid" className="my-8" />
+
+        {/* Author Bio */}
+        <AuthorBio authorEmail={article.author_email} authorName={article.author_name} />
 
         {/* Comments */}
         <CommentsSection article={article} />
