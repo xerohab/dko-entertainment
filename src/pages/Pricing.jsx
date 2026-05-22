@@ -27,12 +27,12 @@ export default function Pricing() {
   }, []);
 
   const handleSubscribe = (plan) => {
-    if (!plan.paypal_plan_id) {
-      alert("PayPal plan not configured yet. Please check back soon.");
-      return;
-    }
     if (!user) {
       base44.auth.redirectToLogin("/pricing");
+      return;
+    }
+    if (!plan.paypal_plan_id) {
+      alert("Subscription payments are not yet set up. Please contact us to subscribe.");
       return;
     }
     // Redirect to PayPal
