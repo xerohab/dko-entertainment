@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, Edit2, Check, X, Loader2, ChevronRight, FolderOpen, Folder } from "lucide-react";
-import CategoryColorPicker, { PRESET_COLORS } from "@/components/categories/CategoryColorPicker";
+import CategoryColorPicker, { PRESET_COLORS } from "@/components/categories/CategoryColorPicker.jsx";
 
 export default function CategoriesManager() {
   const { user } = useOutletContext();
@@ -17,6 +17,8 @@ export default function CategoriesManager() {
   const [adding, setAdding] = useState(null);
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(PRESET_COLORS[0].value);
+  const [newLink, setNewLink] = useState("");
+  const [editLink, setEditLink] = useState("");
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
@@ -41,12 +43,14 @@ export default function CategoriesManager() {
       name: newName.trim(),
       slug: generateSlug(newName.trim()),
       color: newColor,
+      link_url: newLink.trim() || null,
       parent_id: parentId || null,
       level,
       sort_order: categories.filter(c => c.parent_id === parentId).length,
     });
     setNewName("");
     setNewColor(PRESET_COLORS[0].value);
+    setNewLink("");
     setAdding(null);
     setSaving(false);
     load();
@@ -59,6 +63,7 @@ export default function CategoriesManager() {
       name: editName.trim(),
       slug: generateSlug(editName.trim()),
       color: editColor,
+      link_url: editLink.trim() || null,
     });
     setEditing(null);
     setSaving(false);
@@ -70,7 +75,7 @@ export default function CategoriesManager() {
     const msg = children.length > 0
       ? `Delete "${cat.name}" and its ${children.length} sub-categor${children.length === 1 ? "y" : "ies"}? This cannot be undone.`
       : `Delete category "${cat.name}"?`;
-    if (!confirm(msg)) return;
+    if (!window.confirm(msg)) return;
     const toDelete = [cat.id];
     const addChildren = (id) => {
       categories.filter(c => c.parent_id === id).forEach(c => {
@@ -110,13 +115,21 @@ export default function CategoriesManager() {
         <CategoryColorPicker value={newColor} onChange={setNewColor} />
         <div className="w-5 h-5 rounded-full shrink-0 border border-border/50" style={{ backgroundColor: newColor }} />
       </div>
+      <div className="flex items-center gap-2">
+        <input
+          value={newLink}
+          onChange={e => setNewLink(e.target.value)}
+          placeholder="Optional link URL (e.g. https://youtube.com/...)"
+          className="flex-1 bg-background border border-border/50 rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+        />
+      </div>
     </div>
   );
 
   const renderCategory = (cat, depth = 0) => {
     const children = categories.filter(c => c.parent_id === cat.id);
     const indent = depth * 20;
-    const canAddChild = depth < 2;
+    const canAddChild = depth < 9;
     const catColor = cat.color || "#CC0000";
 
     return (
@@ -138,25 +151,31 @@ export default function CategoriesManager() {
 
           {editing === cat.id ? (
             <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  autoFocus
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") handleEdit(cat); if (e.key === "Escape") setEditing(null); }}
-                  className="flex-1 bg-secondary border border-primary rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none"
-                />
-                <button onClick={() => handleEdit(cat)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
-                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                </button>
-                <button onClick={() => setEditing(null)} className="p-1.5 text-muted-foreground hover:text-white">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-inter shrink-0">Colour:</span>
-                <CategoryColorPicker value={editColor} onChange={setEditColor} />
-              </div>
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleEdit(cat); if (e.key === "Escape") setEditing(null); }}
+                className="flex-1 bg-secondary border border-primary rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none"
+              />
+              <button onClick={() => handleEdit(cat)} disabled={saving} className="p-1.5 text-green-400 hover:text-green-300">
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              </button>
+              <button onClick={() => setEditing(null)} className="p-1.5 text-muted-foreground hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-inter shrink-0">Colour:</span>
+              <CategoryColorPicker value={editColor} onChange={setEditColor} />
+            </div>
+            <input
+              value={editLink}
+              onChange={e => setEditLink(e.target.value)}
+              placeholder="Optional link URL (e.g. https://youtube.com/...)"
+              className="w-full bg-secondary border border-border rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+            />
             </div>
           ) : (
             <>
@@ -170,9 +189,15 @@ export default function CategoriesManager() {
                   </span>
                   {depth === 0 && <span className="text-xs font-inter text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">Top Level</span>}
                   {depth === 1 && <span className="text-xs font-inter text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded">Sub</span>}
-                  {depth === 2 && <span className="text-xs font-inter text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded">Sub-Sub</span>}
+                  {depth >= 2 && <span className="text-xs font-inter text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded">Level {depth + 1}</span>}
                 </div>
-                <div className="text-muted-foreground font-inter text-xs mt-0.5">/category/{cat.slug}</div>
+                <div className="text-muted-foreground font-inter text-xs mt-0.5">
+                  {cat.link_url ? (
+                    <span className="text-accent">🔗 {cat.link_url}</span>
+                  ) : (
+                    <span>/category/{cat.slug}</span>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -186,7 +211,7 @@ export default function CategoriesManager() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setEditing(cat.id); setEditName(cat.name); setEditColor(cat.color || PRESET_COLORS[0].value); }}
+                  onClick={() => { setEditing(cat.id); setEditName(cat.name); setEditColor(cat.color || PRESET_COLORS[0].value); setEditLink(cat.link_url || ""); }}
                   className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5" />

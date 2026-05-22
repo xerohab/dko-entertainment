@@ -9,9 +9,10 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Public pages
 import Home from './pages/Home.jsx';
 import CategoryPage from './pages/CategoryPage';
-import ArticlePage from './pages/ArticlePage';
+import ArticlePage from './pages/ArticlePage.jsx';
 import SearchPage from './pages/SearchPage';
 import Pricing from './pages/Pricing';
+import SavedArticles from './pages/SavedArticles';
 
 // Admin layout + pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -26,6 +27,7 @@ import UserProfile from './pages/admin/UserProfile';
 import CommentsManager from './pages/admin/CommentsManager';
 import SubscriptionsManager from './pages/admin/SubscriptionsManager';
 import ArticleAnalytics from './pages/admin/ArticleAnalytics';
+import AdsManager from './pages/admin/AdsManager';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,6 +57,7 @@ const AuthenticatedApp = () => {
       <Route path="/article/:slug" element={<ArticlePage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/saved" element={<SavedArticles />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
@@ -71,6 +74,7 @@ const AuthenticatedApp = () => {
         <Route path="comments" element={<CommentsManager />} />
         <Route path="subscriptions" element={<SubscriptionsManager />} />
         <Route path="analytics" element={<ArticleAnalytics />} />
+        <Route path="ads" element={<AdsManager />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

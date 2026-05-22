@@ -3,7 +3,7 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import RichEditor from "@/components/editor/RichEditor";
 import ImagePickerModal from "@/components/media/ImagePickerModal";
-import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search } from "lucide-react";
+import { Save, Send, ArrowLeft, Image as ImageIcon, X, Loader2, Twitter, Tag, Search, Trash2 } from "lucide-react";
 
 export default function ArticleEditor() {
   const { id } = useParams();

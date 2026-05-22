@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 
-export default function ArticleCard({ article, size = "default" }) {
+export default function ArticleCard({ article, size = "default", categoryColor }) {
   const date = article.published_date ? format(new Date(article.published_date), "MMM d, yyyy") : "";
+  const color = categoryColor || "#CC0000";
 
   if (size === "hero") {
     return (
@@ -18,9 +19,14 @@ export default function ArticleCard({ article, size = "default" }) {
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          <span className="inline-block bg-primary text-white text-xs font-oswald font-semibold tracking-widest uppercase px-3 py-1 rounded mb-3">
-            {article.category}
-          </span>
+          {article.category && (
+            <span
+              className="inline-block text-white text-xs font-oswald font-semibold tracking-widest uppercase px-3 py-1 rounded mb-3"
+              style={{ backgroundColor: color }}
+            >
+              {article.category}
+            </span>
+          )}
           <h2 className="font-oswald font-bold text-white text-2xl md:text-3xl leading-tight uppercase group-hover:text-primary transition-colors">
             {article.title}
           </h2>
@@ -46,7 +52,9 @@ export default function ArticleCard({ article, size = "default" }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-primary font-oswald text-xs font-semibold tracking-wider uppercase">{article.category}</span>
+          <span className="font-oswald text-xs font-semibold tracking-wider uppercase" style={{ color }}>
+            {article.category}
+          </span>
           <h4 className="font-oswald font-semibold text-white text-sm leading-tight mt-0.5 group-hover:text-primary transition-colors line-clamp-2 uppercase">
             {article.title}
           </h4>
@@ -68,9 +76,14 @@ export default function ArticleCard({ article, size = "default" }) {
         )}
       </div>
       <div className="p-4">
-        <span className="inline-block bg-primary text-white text-xs font-oswald font-semibold tracking-widest uppercase px-2 py-0.5 rounded mb-2">
-          {article.category}
-        </span>
+        {article.category && (
+          <span
+            className="inline-block text-white text-xs font-oswald font-semibold tracking-widest uppercase px-2 py-0.5 rounded mb-2"
+            style={{ backgroundColor: color }}
+          >
+            {article.category}
+          </span>
+        )}
         <h3 className="font-oswald font-bold text-white text-base leading-tight uppercase group-hover:text-primary transition-colors line-clamp-2">
           {article.title}
         </h3>

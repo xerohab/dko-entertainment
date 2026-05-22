@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Menu, X, Search, ChevronDown, LogIn, LogOut, User, Shield } from "lucide-react";
+import { Menu, X, Search, ChevronDown, LogIn, LogOut, User, Shield, Bookmark } from "lucide-react";
 
 function NavDropdown({ cat, subs, location }) {
   const [open, setOpen] = useState(false);
@@ -16,6 +16,13 @@ function NavDropdown({ cat, subs, location }) {
   const isActive = location.pathname.startsWith(`/category/${cat.slug}`);
 
   if (!subs || subs.length === 0) {
+    if (cat.link_url) {
+      return (
+        <a href={cat.link_url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 font-oswald font-medium text-sm tracking-wider uppercase transition-colors hover:text-primary text-foreground">
+          {cat.name}
+        </a>
+      );
+    }
     return (
       <Link
         to={`/category/${cat.slug}`}
@@ -38,14 +45,6 @@ function NavDropdown({ cat, subs, location }) {
 
       {open && (
         <div className="absolute top-full left-0 mt-1 bg-black border border-border rounded-lg shadow-2xl shadow-black/50 min-w-48 z-50 py-1">
-          <Link
-            to={`/category/${cat.slug}`}
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 font-oswald text-sm uppercase text-muted-foreground hover:text-white hover:bg-secondary/50 transition-colors"
-          >
-            All {cat.name}
-          </Link>
-          <div className="border-t border-border/50 my-1" />
           {subs.map(sub => (
             <SubDropdownItem key={sub.id} sub={sub} grandchildren={sub._grandchildren || []} location={location} onClose={() => setOpen(false)} />
           ))}
@@ -61,6 +60,19 @@ function SubDropdownItem({ sub, allCats, location, onClose, grandchildren = [] }
   const isActive = location.pathname.startsWith(`/category/${sub.slug}`);
 
   if (grandchildren.length === 0) {
+    if (sub.link_url) {
+      return (
+        <a
+          href={sub.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          className="block px-4 py-2 font-oswald text-sm uppercase hover:text-white hover:bg-secondary/50 transition-colors text-foreground"
+        >
+          {sub.name}
+        </a>
+      );
+    }
     return (
       <Link
         to={`/category/${sub.slug}`}
@@ -80,22 +92,21 @@ function SubDropdownItem({ sub, allCats, location, onClose, grandchildren = [] }
       </div>
       {open && (
         <div className="bg-secondary/30 border-t border-border/30">
-          <Link
-            to={`/category/${sub.slug}`}
-            onClick={onClose}
-            className="block pl-8 pr-4 py-2 font-oswald text-xs uppercase text-muted-foreground hover:text-white hover:bg-secondary/50 transition-colors"
-          >
-            All {sub.name}
-          </Link>
           {grandchildren.map(gc => (
-            <Link
-              key={gc.id}
-              to={`/category/${gc.slug}`}
-              onClick={onClose}
-              className={`block pl-8 pr-4 py-2 font-oswald text-xs uppercase hover:text-white hover:bg-secondary/50 transition-colors ${location.pathname === `/category/${gc.slug}` ? "text-primary" : "text-muted-foreground"}`}
-            >
-              {gc.name}
-            </Link>
+            gc.link_url ? (
+              <a key={gc.id} href={gc.link_url} target="_blank" rel="noopener noreferrer" onClick={onClose} className="block pl-8 pr-4 py-2 font-oswald text-xs uppercase hover:text-white hover:bg-secondary/50 transition-colors text-muted-foreground">
+                {gc.name}
+              </a>
+            ) : (
+              <Link
+                key={gc.id}
+                to={`/category/${gc.slug}`}
+                onClick={onClose}
+                className={`block pl-8 pr-4 py-2 font-oswald text-xs uppercase hover:text-white hover:bg-secondary/50 transition-colors ${location.pathname === `/category/${gc.slug}` ? "text-primary" : "text-muted-foreground"}`}
+              >
+                {gc.name}
+              </Link>
+            )
           ))}
         </div>
       )}
@@ -144,6 +155,13 @@ function UserMenu({ user, onLogout }) {
               {isAdmin ? "Admin" : isEditor ? "Editor" : "Member"}
             </span>
           </div>
+          <Link
+            to="/saved"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2 font-oswald text-sm uppercase text-foreground hover:text-white hover:bg-secondary/50 transition-colors"
+          >
+            <Bookmark className="w-3.5 h-3.5" /> Saved Articles
+          </Link>
           {(isAdmin || isEditor) && (
             <Link
               to="/admin"

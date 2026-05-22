@@ -1,0 +1,34 @@
+{
+  "name": "SavedArticle",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who saved the article"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user who saved the article"
+    },
+    "article_id": {
+      "type": "string",
+      "description": "ID of the saved article"
+    },
+    "article_title": {
+      "type": "string",
+      "description": "Article title for quick display"
+    },
+    "article_slug": {
+      "type": "string",
+      "description": "Article slug for linking"
+    },
+    "article_image": {
+      "type": "string",
+      "description": "Featured image URL"
+    }
+  },
+  "required": [
+    "user_email",
+    "article_id"
+  ]
+}

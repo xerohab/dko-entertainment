@@ -70,6 +70,12 @@ export default function Home() {
   const hero = articles[0];
   const rest = articles.slice(1);
 
+  const getCategoryColor = (article) => {
+    if (!article.category) return "#CC0000";
+    const cat = categories.find(c => c.name === article.category);
+    return cat?.color || "#CC0000";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <PublicNav />
@@ -125,14 +131,14 @@ export default function Home() {
             {/* Hero */}
             {hero && !search && !selectedCategory && (
               <div className="mb-8">
-                <ArticleCard article={hero} size="hero" />
+                <ArticleCard article={hero} size="hero" categoryColor={getCategoryColor(hero)} />
               </div>
             )}
 
             {/* Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {(search || selectedCategory ? articles : rest).map(article => (
-                <ArticleCard key={article.id} article={article} />
+                <ArticleCard key={article.id} article={article} categoryColor={getCategoryColor(article)} />
               ))}
             </div>
 

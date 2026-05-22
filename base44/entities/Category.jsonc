@@ -26,11 +26,15 @@
     "level": {
       "type": "number",
       "default": 0,
-      "description": "0=top level, 1=sub, 2=sub-sub"
+      "description": "0=top level, 1=sub, 2=sub-sub etc"
     },
     "description": {
       "type": "string",
       "description": "Optional short description"
+    },
+    "link_url": {
+      "type": "string",
+      "description": "Optional external link URL \u2014 if set, clicking navigates to this URL instead of category page"
     }
   },
   "required": [

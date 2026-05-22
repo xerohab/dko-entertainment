@@ -1,0 +1,64 @@
+{
+  "name": "Ad",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Internal name for the ad"
+    },
+    "slot": {
+      "type": "string",
+      "enum": [
+        "top",
+        "mid",
+        "bottom",
+        "sidebar"
+      ],
+      "description": "Where on page the ad appears"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "text",
+        "html",
+        "adsense"
+      ],
+      "default": "image",
+      "description": "Ad type"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Image URL (for image type)"
+    },
+    "link_url": {
+      "type": "string",
+      "description": "Click-through URL"
+    },
+    "headline": {
+      "type": "string",
+      "description": "Ad headline text"
+    },
+    "body_text": {
+      "type": "string",
+      "description": "Ad body text"
+    },
+    "custom_html": {
+      "type": "string",
+      "description": "Custom HTML (for html type)"
+    },
+    "adsense_publisher_id": {
+      "type": "string",
+      "description": "Google AdSense publisher ID (ca-pub-...)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "slot",
+    "type"
+  ]
+}
