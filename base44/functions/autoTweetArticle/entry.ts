@@ -41,9 +41,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Twitter credentials not configured' }, { status: 400 });
     }
 
-    // Build tweet text
+    // Build tweet text with article name, image URL, and link
     const articleUrl = `${Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app'}/article/${article.slug || article.id}`;
-    const tweetText = `${article.title}\n\n${articleUrl}`;
+    const imageText = article.featured_image ? `\n\n${article.featured_image}` : '';
+    const tweetText = `${article.title}${imageText}\n\n${articleUrl}`;
 
     // OAuth 1.0a signing
     const oauth = new OAuth({
@@ -58,44 +59,13 @@ Deno.serve(async (req) => {
     const token = { key: accessToken, secret: accessSecret };
     const authHeader = oauth.toHeader(oauth.authorize({ url, method: 'POST' }, token));
 
-    // Build request payload with optional media
-    const payload = { text: tweetText };
-    
-    // Add media if featured image exists
-    if (article.featured_image) {
-      const imageRes = await fetch(article.featured_image);
-      if (imageRes.ok) {
-        const imageBuffer = await imageRes.arrayBuffer();
-        const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-        
-        // Upload media to Twitter
-        const mediaUrl = 'https://upload.twitter.com/1.1/media/upload.json';
-        const mediaAuthHeader = oauth.toHeader(oauth.authorize({ url: mediaUrl, method: 'POST' }, token));
-        
-        const mediaRes = await fetch(mediaUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': mediaAuthHeader['Authorization'],
-          },
-          body: new URLSearchParams({
-            media_data: base64Image,
-          }),
-        });
-        
-        const mediaData = await mediaRes.json();
-        if (mediaData.media_id) {
-          payload.media = { media_ids: [mediaData.media_id.toString()] };
-        }
-      }
-    }
-
     const tweetRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': authHeader['Authorization'],
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ text: tweetText.slice(0, 280) }),
     });
 
     const tweetData = await tweetRes.json();
