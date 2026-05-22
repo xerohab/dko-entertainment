@@ -3,11 +3,17 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Save, Twitter, Eye, EyeOff, Loader2, Settings, CheckCircle, CreditCard, Megaphone, Info } from "lucide-react";
 
-const TWITTER_FIELDS = [
+const TWITTER_V1_FIELDS = [
   { key: "twitter_api_key", label: "API Key (Consumer Key)", placeholder: "Enter Twitter API Key" },
   { key: "twitter_api_secret", label: "API Secret (Consumer Secret)", placeholder: "Enter Twitter API Secret" },
   { key: "twitter_access_token", label: "Access Token", placeholder: "Enter Access Token" },
   { key: "twitter_access_secret", label: "Access Token Secret", placeholder: "Enter Access Token Secret" },
+];
+
+const TWITTER_V2_FIELDS = [
+  { key: "twitter_oauth2_client_id", label: "OAuth 2.0 Client ID", placeholder: "Enter OAuth 2.0 Client ID" },
+  { key: "twitter_oauth2_client_secret", label: "OAuth 2.0 Client Secret", placeholder: "Enter OAuth 2.0 Client Secret" },
+  { key: "twitter_oauth2_bearer_token", label: "Bearer Token", placeholder: "Enter Bearer Token" },
 ];
 
 const PAYPAL_FIELDS = [
@@ -112,10 +118,19 @@ export default function SiteSettings() {
 
       {/* Twitter */}
       <SectionCard icon={Twitter} iconColor="bg-[#1DA1F2]/10 text-[#1DA1F2]" title="Twitter / X Integration" subtitle="Auto-tweets when articles are published">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {TWITTER_FIELDS.map(f => (
+        <p className="text-muted-foreground font-inter text-xs font-semibold uppercase tracking-wider mb-3">v1.1 Keys (OAuth 1.0a)</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+          {TWITTER_V1_FIELDS.map(f => (
             <SecretField key={f.key} label={f.label} fieldKey={f.key} value={settings[f.key]} onChange={set} />
           ))}
+        </div>
+        <div className="border-t border-border/50 pt-5">
+          <p className="text-muted-foreground font-inter text-xs font-semibold uppercase tracking-wider mb-3">v2 Keys (OAuth 2.0)</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {TWITTER_V2_FIELDS.map(f => (
+              <SecretField key={f.key} label={f.label} fieldKey={f.key} value={settings[f.key]} onChange={set} />
+            ))}
+          </div>
         </div>
       </SectionCard>
 
