@@ -17,6 +17,7 @@ export default function ArticleEditor() {
     category: "", categories: [],
     featured_image: "", status: "draft",
     published_date: "", seo_title: "", seo_description: "",
+    author_name: "", author_email: "",
   });
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -45,6 +46,8 @@ export default function ArticleEditor() {
             published_date: a.published_date || "",
             seo_title: a.seo_title || "",
             seo_description: a.seo_description || "",
+            author_name: a.author_name || "",
+            author_email: a.author_email || "",
           });
         }
         setLoading(false);
@@ -74,8 +77,8 @@ export default function ArticleEditor() {
     setUpdating(true);
     const data = {
       ...form,
-      author_email: user.email,
-      author_name: user.display_name || user.full_name,
+      author_email: form.author_email || user.email,
+      author_name: form.author_name || user.display_name || user.full_name,
     };
     await base44.entities.Article.update(id, data);
     setUpdating(false);
@@ -89,8 +92,8 @@ export default function ArticleEditor() {
     const data = {
       ...form,
       status: publish ? "published" : "draft",
-      author_email: user.email,
-      author_name: user.display_name || user.full_name,
+      author_email: form.author_email || user.email,
+      author_name: form.author_name || user.display_name || user.full_name,
       ...(publish && !form.published_date ? { published_date: now } : {}),
     };
     if (isNew) {
@@ -234,6 +237,30 @@ export default function ArticleEditor() {
               className="w-full bg-secondary border border-border rounded px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
             />
           </div>
+
+          {/* Author */}
+          {user?.role === "admin" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author Name</label>
+                <input
+                  value={form.author_name}
+                  onChange={e => setForm(f => ({ ...f, author_name: e.target.value }))}
+                  placeholder="Author name..."
+                  className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author Email</label>
+                <input
+                  value={form.author_email}
+                  onChange={e => setForm(f => ({ ...f, author_email: e.target.value }))}
+                  placeholder="author@example.com..."
+                  className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Body */}
           <div>
