@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { UserPlus, Shield, Edit2, Loader2, Mail, Check, X, ExternalLink } from "lucide-react";
+import { UserPlus, Edit2, Loader2, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function UsersManager() {
@@ -12,9 +12,7 @@ export default function UsersManager() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("editor");
   const [inviting, setInviting] = useState(false);
-  const [editingRole, setEditingRole] = useState(null);
-  const [newRole, setNewRole] = useState("");
-  const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
@@ -28,14 +26,6 @@ export default function UsersManager() {
     setInviteEmail("");
     setInviting(false);
     alert(`Invitation sent to ${inviteEmail.trim()} as ${inviteRole}`);
-  };
-
-  const handleRoleUpdate = async (u) => {
-    setSaving(true);
-    await base44.entities.User.update(u.id, { role: newRole });
-    setUsers(prev => prev.map(usr => usr.id === u.id ? { ...usr, role: newRole } : usr));
-    setEditingRole(null);
-    setSaving(false);
   };
 
   const roleColor = (role) => {
@@ -115,49 +105,21 @@ export default function UsersManager() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground font-inter text-sm">{u.email}</td>
                   <td className="px-4 py-3">
-                    {editingRole === u.id ? (
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={newRole}
-                          onChange={e => setNewRole(e.target.value)}
-                          className="bg-secondary border border-primary rounded px-2 py-1 text-xs text-foreground focus:outline-none"
-                        >
-                          <option value="editor">Editor</option>
-                          <option value="admin">Admin</option>
-                          <option value="user">User</option>
-                        </select>
-                        <button onClick={() => handleRoleUpdate(u)} disabled={saving} className="p-1 text-green-400">
-                          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                        </button>
-                        <button onClick={() => setEditingRole(null)} className="p-1 text-muted-foreground hover:text-white">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
-                        {u.role || "user"}
-                      </span>
-                    )}
+                    <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
+                      {u.role || "user"}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end items-center gap-1">
-                      {editingRole !== u.id && (
-                        <>
-                          <Link
-                            to={`/admin/users/${u.id}`}
-                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
-                            title="Edit profile"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                          <button
-                            onClick={() => { setEditingRole(u.id); setNewRole(u.role || "user"); }}
-                            className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
-                            title="Change role"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        </>
+                    <div className="flex justify-end items-center gap-2">
+                      {(
+                        <Link
+                          to={`/admin/users/${u.id}`}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary border border-border text-white font-inter text-xs rounded hover:border-primary transition-colors"
+                          title="Edit user"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          Edit
+                        </Link>
                       )}
                     </div>
                   </td>
