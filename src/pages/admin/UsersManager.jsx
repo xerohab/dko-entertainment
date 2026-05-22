@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { UserPlus, Edit2, Loader2, Mail } from "lucide-react";
+import { UserPlus, Edit2, Loader2, Mail, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function UsersManager() {
@@ -12,6 +12,7 @@ export default function UsersManager() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("editor");
   const [inviting, setInviting] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
 
   useEffect(() => {
@@ -94,36 +95,53 @@ export default function UsersManager() {
             </thead>
             <tbody className="divide-y divide-border">
               {users.map(u => (
-                <tr key={u.id} className="hover:bg-secondary/30 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-oswald font-bold text-sm">
-                        {u.full_name?.[0]?.toUpperCase() || "U"}
+                <>
+                  <tr
+                    key={u.id}
+                    onClick={() => setExpandedId(expandedId === u.id ? null : u.id)}
+                    className="hover:bg-secondary/30 transition-colors cursor-pointer"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-oswald font-bold text-sm">
+                          {u.full_name?.[0]?.toUpperCase() || "U"}
+                        </div>
+                        <span className="text-white font-inter text-sm">{u.full_name || "—"}</span>
                       </div>
-                      <span className="text-white font-inter text-sm">{u.full_name || "—"}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground font-inter text-sm">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
-                      {u.role || "user"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end items-center gap-2">
-                      {(
-                        <Link
-                          to={`/admin/users/${u.id}`}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary border border-border text-white font-inter text-xs rounded hover:border-primary transition-colors"
-                          title="Edit user"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          Edit
-                        </Link>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground font-inter text-sm hidden sm:table-cell">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded capitalize ${roleColor(u.role)}`}>
+                        {u.role || "user"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground inline-block transition-transform ${expandedId === u.id ? "rotate-180" : ""}`} />
+                    </td>
+                  </tr>
+                  {expandedId === u.id && (
+                    <tr key={`${u.id}-actions`} className="bg-secondary/20 border-b border-border">
+                      <td colSpan={4} className="px-4 py-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Link
+                            to={`/admin/users/${u.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white font-oswald text-xs font-semibold tracking-wider uppercase rounded hover:bg-red-700 transition-colors"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" /> Edit User
+                          </Link>
+                          <a
+                            href={`mailto:${u.email}`}
+                            onClick={e => e.stopPropagation()}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-secondary border border-border text-white font-oswald text-xs font-semibold tracking-wider uppercase rounded hover:border-primary transition-colors"
+                          >
+                            <Mail className="w-3.5 h-3.5" /> Email User
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>
