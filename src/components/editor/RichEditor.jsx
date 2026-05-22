@@ -81,14 +81,49 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
+// YouTube URL input modal
+function YouTubeModal({ onConfirm, onClose }) {
+  const [url, setUrl] = useState("");
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70" onMouseDown={e => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <h3 className="font-oswald font-bold text-white text-lg uppercase mb-4 flex items-center gap-2">
+          <Youtube className="w-5 h-5 text-red-500" /> Embed YouTube Video
+        </h3>
+        <input
+          autoFocus
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") onConfirm(url); if (e.key === "Escape") onClose(); }}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className="w-full bg-secondary border border-border rounded px-4 py-2.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-4"
+        />
+        <div className="flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 bg-secondary border border-border rounded text-sm text-muted-foreground hover:text-white font-inter transition-colors">Cancel</button>
+          <button
+            onClick={() => onConfirm(url)}
+            disabled={!url.trim()}
+            className="px-4 py-2 bg-primary text-white font-oswald font-bold text-sm uppercase rounded hover:bg-red-700 transition-colors disabled:opacity-40"
+          >
+            Embed
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Editor ─────────────────────────────────────────────────────────────
 
 export default function RichEditor({ value, onChange, placeholder = "Write your article here..." }) {
   const editorRef = useRef(null);
   const isInitialized = useRef(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showYouTubeModal, setShowYouTubeModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const savedRange = useRef(null);
+  // Store range as serializable bookmark instead of a live Range object
+  const savedRangeRef = useRef(null);
+  const uploadInputRef = useRef(null);
 
   // Initialize editor content once
   useEffect(() => {
@@ -98,37 +133,58 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
     }
   }, []);
 
-  // Sync incoming value changes (e.g. loading existing article)
+  // Sync incoming value when loading an existing article (only if editor is empty)
   useEffect(() => {
-    if (editorRef.current && value !== undefined && editorRef.current.innerHTML !== value) {
-      // Only update if content is empty (initial load)
-      if (!isInitialized.current || editorRef.current.innerHTML === "") {
-        editorRef.current.innerHTML = value || "";
-        isInitialized.current = true;
-      }
+    if (editorRef.current && value && !isInitialized.current) {
+      editorRef.current.innerHTML = value;
+      isInitialized.current = true;
+    } else if (editorRef.current && value && editorRef.current.innerHTML === "") {
+      editorRef.current.innerHTML = value;
     }
   }, [value]);
 
-  const saveSelection = () => {
+  // ── Selection helpers ──
+  // Save the current cursor/selection as a Range object clone
+  const saveSelection = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
-      savedRange.current = sel.getRangeAt(0);
+      const range = sel.getRangeAt(0);
+      // Only save if the range is inside our editor
+      if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
     }
-  };
+  }, []);
 
-  const restoreSelection = () => {
-    if (savedRange.current) {
+  // Restore saved selection into the editor
+  const restoreSelection = useCallback(() => {
+    editorRef.current?.focus();
+    const savedRange = savedRangeRef.current;
+    if (savedRange) {
       const sel = window.getSelection();
       sel.removeAllRanges();
-      sel.addRange(savedRange.current);
-    } else {
-      editorRef.current?.focus();
+      sel.addRange(savedRange);
     }
-  };
+  }, []);
 
-  const exec = useCallback((cmd, value = null) => {
+  // Ensure a saved selection exists — if not, place cursor at end of editor
+  const ensureSelection = useCallback(() => {
+    if (savedRangeRef.current) return;
     editorRef.current?.focus();
-    document.execCommand(cmd, false, value);
+    const sel = window.getSelection();
+    if (sel && editorRef.current) {
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false); // collapse to end
+      sel.removeAllRanges();
+      sel.addRange(range);
+      savedRangeRef.current = range.cloneRange();
+    }
+  }, []);
+
+  const exec = useCallback((cmd, val = null) => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false, val);
     notifyChange();
   }, []);
 
@@ -138,58 +194,74 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
     }
   };
 
-  const insertHTML = (html) => {
+  // Insert HTML at the saved cursor position
+  const insertAtCursor = useCallback((html) => {
+    ensureSelection();
     restoreSelection();
-    editorRef.current?.focus();
     document.execCommand("insertHTML", false, html);
     notifyChange();
-  };
+    // Clear saved range so next operation starts fresh from new cursor
+    savedRangeRef.current = null;
+  }, [ensureSelection, restoreSelection]);
 
-  // ── Image insertion ──
-  const handleImageFromLibrary = (url) => {
+  // ── Image from library ──
+  const handleImageFromLibrary = useCallback((url) => {
     setShowImagePicker(false);
-    restoreSelection();
-    insertHTML(`<img src="${url}" alt="Article image" style="max-width:100%;height:auto;border-radius:6px;margin:8px 0;" />`);
-  };
+    // Small delay to let modal unmount and focus return
+    setTimeout(() => {
+      insertAtCursor(`<img src="${url}" alt="Article image" style="max-width:100%;height:auto;border-radius:6px;margin:8px 0;display:block;" /><p><br></p>`);
+    }, 50);
+  }, [insertAtCursor]);
 
+  // ── Image upload ──
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Save selection BEFORE the file dialog steals focus
     setUploading(true);
-    saveSelection();
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    insertHTML(`<img src="${file_url}" alt="Article image" style="max-width:100%;height:auto;border-radius:6px;margin:8px 0;" />`);
-    setUploading(false);
+    e.target.value = "";
+    setTimeout(() => {
+      insertAtCursor(`<img src="${file_url}" alt="Article image" style="max-width:100%;height:auto;border-radius:6px;margin:8px 0;display:block;" /><p><br></p>`);
+      setUploading(false);
+    }, 50);
   };
 
   // ── YouTube ──
-  const handleYouTube = () => {
+  const handleOpenYouTube = useCallback(() => {
     saveSelection();
-    const url = prompt("Paste YouTube URL:");
-    if (!url) return;
+    ensureSelection();
+    setShowYouTubeModal(true);
+  }, [saveSelection, ensureSelection]);
+
+  const handleYouTubeConfirm = useCallback((url) => {
+    setShowYouTubeModal(false);
+    if (!url?.trim()) return;
     const vid = extractYouTubeId(url);
     if (!vid) { alert("Couldn't find a YouTube video ID in that URL."); return; }
-    insertHTML(
-      `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:12px 0;border-radius:8px;">` +
-      `<iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>` +
-      `</div>`
-    );
-  };
+    setTimeout(() => {
+      insertAtCursor(
+        `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:12px 0;border-radius:8px;">` +
+        `<iframe src="https://www.youtube.com/embed/${vid}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>` +
+        `</div><p><br></p>`
+      );
+    }, 50);
+  }, [insertAtCursor]);
 
   // ── Link ──
-  const handleLink = () => {
+  const handleLink = useCallback(() => {
     saveSelection();
     const url = prompt("Enter URL:");
     if (!url) return;
+    restoreSelection();
     exec("createLink", url.startsWith("http") ? url : `https://${url}`);
-    // Make link open in new tab
     setTimeout(() => {
-      editorRef.current?.querySelectorAll("a").forEach(a => {
+      editorRef.current?.querySelectorAll("a:not([target])").forEach(a => {
         a.target = "_blank";
         a.rel = "noopener noreferrer";
       });
     }, 50);
-  };
+  }, [saveSelection, restoreSelection, exec]);
 
   // ── Heading ──
   const applyHeading = (tag, close) => {
@@ -200,18 +272,16 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
 
   // ── Font size ──
   const applyFontSize = (size, close) => {
-    exec("fontSize", "7"); // placeholder
-    // Replace the font size 7 with actual CSS
+    exec("fontSize", "7");
     setTimeout(() => {
       editorRef.current?.querySelectorAll("font[size='7']").forEach(el => {
         el.removeAttribute("size");
         el.style.fontSize = size;
       });
+      notifyChange();
     }, 10);
     close();
   };
-
-  const uploadInputRef = useRef(null);
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-secondary/50">
@@ -317,28 +387,34 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
         {/* Link */}
         <ToolbarBtn onClick={handleLink} title="Insert Link"><Link className="w-4 h-4" /></ToolbarBtn>
 
-        {/* Image (library) */}
+        {/* Image — from library */}
         <ToolbarBtn
-          onClick={() => { saveSelection(); setShowImagePicker(true); }}
+          onClick={() => { saveSelection(); ensureSelection(); setShowImagePicker(true); }}
           title="Insert Image from Library"
         >
           <ImageIcon className="w-4 h-4" />
         </ToolbarBtn>
 
-        {/* Image (upload) */}
+        {/* Image — upload */}
         <ToolbarBtn
-          onClick={() => { saveSelection(); uploadInputRef.current?.click(); }}
+          onClick={() => { saveSelection(); ensureSelection(); uploadInputRef.current?.click(); }}
           disabled={uploading}
-          title="Upload Image"
+          title="Upload & Insert Image"
         >
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-            <span className="text-xs font-oswald font-bold">IMG+</span>
+            <span className="text-xs font-oswald font-bold leading-none">IMG+</span>
           )}
         </ToolbarBtn>
-        <input ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
 
         {/* YouTube */}
-        <ToolbarBtn onClick={handleYouTube} title="Embed YouTube Video">
+        <ToolbarBtn onClick={handleOpenYouTube} title="Embed YouTube Video">
           <Youtube className="w-4 h-4" />
         </ToolbarBtn>
       </div>
@@ -351,6 +427,7 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
         onInput={notifyChange}
         onMouseUp={saveSelection}
         onKeyUp={saveSelection}
+        onFocus={saveSelection}
         data-placeholder={placeholder}
         className="min-h-[360px] px-5 py-4 text-white font-inter text-base focus:outline-none
           [&_h1]:font-oswald [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:uppercase [&_h1]:my-3
@@ -370,11 +447,17 @@ export default function RichEditor({ value, onChange, placeholder = "Write your 
         style={{ direction: "ltr" }}
       />
 
-      {/* Image picker modal */}
+      {/* Modals */}
       {showImagePicker && (
         <ImagePickerModal
           onSelect={handleImageFromLibrary}
           onClose={() => setShowImagePicker(false)}
+        />
+      )}
+      {showYouTubeModal && (
+        <YouTubeModal
+          onConfirm={handleYouTubeConfirm}
+          onClose={() => setShowYouTubeModal(false)}
         />
       )}
     </div>
