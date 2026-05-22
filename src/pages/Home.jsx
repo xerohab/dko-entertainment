@@ -16,9 +16,9 @@ export default function Home() {
   const PAGE_SIZE = 6;
 
   useEffect(() => {
-    document.title = "DKO Wrestling | Latest News & Updates";
+    document.title = "DKO Entertainment | Latest News & Updates";
     const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute('content', "Stay updated with the latest wrestling news, articles, and stories from DKO Wrestling.");
+    if (metaDesc) metaDesc.setAttribute('content', "Stay updated with the latest entertainment news, articles, and stories from DKO Entertainment.");
     
     base44.entities.Category.list("sort_order", 200).then(setCategories).catch(() => {});
     loadArticles(1, "", "");
@@ -197,9 +197,9 @@ export default function Home() {
       <footer className="border-t border-border mt-16 py-8 text-center">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <img src="https://media.base44.com/images/public/6a0fab0df03ef3f099fbfaf0/782e6a111_dkowrestl.jpg" alt="DKO Wrestling" className="h-10 w-auto" />
+            <img src="https://media.base44.com/images/public/6a103683a6ef187b171ab5e9/0d98afbe2_541532195_1275130367423447_7827965385774690328_n.jpg" alt="DKO Entertainment" className="h-10 w-auto" />
           </div>
-          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Wrestling All rights reserved. Part of DKO LTD</p>
+          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Entertainment All rights reserved. Part of DKO LTD</p>
         </div>
       </footer>
     </div>
