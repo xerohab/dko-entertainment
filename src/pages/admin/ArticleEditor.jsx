@@ -24,6 +24,8 @@ export default function ArticleEditor() {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [loading, setLoading] = useState(!isNew);
   const [catSearch, setCatSearch] = useState("");
+  const [testingTweet, setTestingTweet] = useState(false);
+  const [tweetResult, setTweetResult] = useState(null);
 
   useEffect(() => {
     base44.entities.Category.list("sort_order", 200).then(setAllCategories);
@@ -105,6 +107,22 @@ export default function ArticleEditor() {
       navigate("/admin/articles");
     }
     setSaving(false);
+  };
+
+  const handleTestTweet = async () => {
+    if (isNew) {
+      alert("Please save the article first before testing tweet");
+      return;
+    }
+    setTestingTweet(true);
+    setTweetResult(null);
+    try {
+      const res = await base44.functions.invoke("autoTweetArticle", { articleId: id });
+      setTweetResult({ success: true, message: "Tweet sent successfully!" });
+    } catch (err) {
+      setTweetResult({ success: false, message: err.message });
+    }
+    setTestingTweet(false);
   };
 
   // Build flat category list with colours, showing hierarchy
@@ -307,6 +325,21 @@ export default function ArticleEditor() {
             <p className="text-muted-foreground font-inter text-xs mt-3 flex items-center gap-1">
               <Twitter className="w-3 h-3" /> Auto-tweets on publish
             </p>
+            {!isNew && (
+              <button
+                onClick={handleTestTweet}
+                disabled={testingTweet || !form.title || !form.featured_image}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-secondary border border-border rounded text-foreground font-inter text-sm hover:border-primary transition-colors disabled:opacity-40"
+              >
+                {testingTweet ? <Loader2 className="w-4 h-4 animate-spin" /> : <Twitter className="w-4 h-4" />}
+                Test Tweet
+              </button>
+            )}
+            {tweetResult && (
+              <div className={`mt-2 p-2 rounded text-xs font-inter ${tweetResult.success ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                {tweetResult.message}
+              </div>
+            )}
           </div>
 
           {/* Categories — multi-select */}
