@@ -15,6 +15,7 @@ const PAYPAL_FIELDS = [
   { key: "paypal_client_secret", label: "PayPal Client Secret", placeholder: "Enter PayPal Client Secret", secret: true },
   { key: "paypal_mode", label: "Mode", type: "select", options: ["sandbox", "live"] },
 ];
+// Note: PayPal Plan ID removed — managed per-plan in Subscriptions
 
 const AD_SLOTS = [
   { key: "ad_top", label: "Top Banner (above article)", description: "Shown at the top of article pages" },

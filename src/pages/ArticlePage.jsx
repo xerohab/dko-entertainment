@@ -111,7 +111,12 @@ export default function ArticlePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      onCopy={e => { e.preventDefault(); alert("Content is copy protected."); }}
+      onContextMenu={e => e.preventDefault()}
+      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+    >
       <PublicNav />
       <article className="max-w-4xl mx-auto px-4 py-8">
         {/* Category */}
@@ -208,6 +213,16 @@ export default function ArticlePage() {
         {/* Comments */}
         <CommentsSection article={article} />
       </article>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-16 py-8 text-center">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <img src="https://media.base44.com/images/public/6a0fab0df03ef3f099fbfaf0/782e6a111_dkowrestl.jpg" alt="DKO Wrestling" className="h-10 w-auto" />
+          </div>
+          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Wrestling All rights reserved. Part of DKO LTD</p>
+        </div>
+      </footer>
 
       {/* Related */}
       {related.length > 0 && (

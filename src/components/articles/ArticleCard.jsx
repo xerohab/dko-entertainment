@@ -5,6 +5,14 @@ export default function ArticleCard({ article, size = "default", categoryColor }
   const date = article.published_date ? format(new Date(article.published_date), "MMM d, yyyy") : "";
   const color = categoryColor || "#CC0000";
 
+  // Determine tag text color based on background luminance
+  const hex = color.replace("#", "");
+  const r = parseInt(hex.substring(0,2)||"cc", 16);
+  const g = parseInt(hex.substring(2,4)||"00", 16);
+  const b = parseInt(hex.substring(4,6)||"00", 16);
+  const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+  const tagTextColor = luminance > 0.5 ? "#000000" : "#ffffff";
+
   if (size === "hero") {
     return (
       <Link to={`/article/${article.slug || article.id}`} className="block group relative overflow-hidden rounded-lg">
@@ -21,8 +29,8 @@ export default function ArticleCard({ article, size = "default", categoryColor }
         <div className="absolute bottom-0 left-0 right-0 p-6">
           {article.category && (
             <span
-              className="inline-block text-white text-xs font-oswald font-semibold tracking-widest uppercase px-3 py-1 rounded mb-3"
-              style={{ backgroundColor: color }}
+              className="inline-block text-xs font-oswald font-semibold tracking-widest uppercase px-3 py-1 rounded mb-3"
+              style={{ backgroundColor: color, color: tagTextColor }}
             >
               {article.category}
             </span>
@@ -52,7 +60,7 @@ export default function ArticleCard({ article, size = "default", categoryColor }
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="font-oswald text-xs font-semibold tracking-wider uppercase" style={{ color }}>
+          <span className="font-oswald text-xs font-semibold tracking-wider uppercase" style={{ color: tagTextColor }}>
             {article.category}
           </span>
           <h4 className="font-oswald font-semibold text-white text-sm leading-tight mt-0.5 group-hover:text-primary transition-colors line-clamp-2 uppercase">
@@ -78,8 +86,8 @@ export default function ArticleCard({ article, size = "default", categoryColor }
       <div className="p-4">
         {article.category && (
           <span
-            className="inline-block text-white text-xs font-oswald font-semibold tracking-widest uppercase px-2 py-0.5 rounded mb-2"
-            style={{ backgroundColor: color }}
+            className="inline-block text-xs font-oswald font-semibold tracking-widest uppercase px-2 py-0.5 rounded mb-2"
+            style={{ backgroundColor: color, color: tagTextColor }}
           >
             {article.category}
           </span>

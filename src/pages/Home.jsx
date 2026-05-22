@@ -77,7 +77,12 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      onCopy={e => { e.preventDefault(); }}
+      onContextMenu={e => e.preventDefault()}
+      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+    >
       <PublicNav />
 
       {/* Search + Filter Bar */}
@@ -101,18 +106,29 @@ export default function Home() {
             >
               All
             </button>
-            {topLevel.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategory(cat.name)}
-                className={`shrink-0 px-3 py-1.5 rounded font-oswald text-xs uppercase tracking-wider transition-colors ${
-                  selectedCategory === cat.name ? "text-white" : "bg-secondary text-muted-foreground hover:text-white"
-                }`}
-                style={selectedCategory === cat.name ? { backgroundColor: cat.color || "#CC0000" } : {}}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {topLevel.map(cat => {
+              const isSelected = selectedCategory === cat.name;
+              const bgColor = cat.color || "#CC0000";
+              // Determine if color is light (use black text) or dark (use white text)
+              const hex = bgColor.replace("#", "");
+              const r = parseInt(hex.substring(0,2), 16);
+              const g = parseInt(hex.substring(2,4), 16);
+              const b = parseInt(hex.substring(4,6), 16);
+              const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+              const textColor = luminance > 0.5 ? "#000000" : "#ffffff";
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategory(cat.name)}
+                  className={`shrink-0 px-3 py-1.5 rounded font-oswald text-xs uppercase tracking-wider transition-colors ${
+                    isSelected ? "" : "bg-secondary text-muted-foreground hover:text-white"
+                  }`}
+                  style={isSelected ? { backgroundColor: bgColor, color: textColor } : {}}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -163,12 +179,9 @@ export default function Home() {
       <footer className="border-t border-border mt-16 py-8 text-center">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <span className="text-white font-oswald font-bold text-xs">DKO</span>
-            </div>
-            <span className="font-oswald font-bold text-white text-base">DKO Wrestling &amp; Entertainment</span>
+            <img src="https://media.base44.com/images/public/6a0fab0df03ef3f099fbfaf0/782e6a111_dkowrestl.jpg" alt="DKO Wrestling" className="h-10 w-auto" />
           </div>
-          <p className="text-muted-foreground font-inter text-xs">© {new Date().getFullYear()} DKO Wrestling and Entertainment. All rights reserved.</p>
+          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Wrestling All rights reserved. Part of DKO LTD</p>
         </div>
       </footer>
     </div>
