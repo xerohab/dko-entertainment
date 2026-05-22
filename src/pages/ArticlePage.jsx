@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import PublicNav from "@/components/layout/PublicNav";
 import ArticleCard from "@/components/articles/ArticleCard";
@@ -7,10 +7,11 @@ import CommentsSection from "@/components/article/CommentsSection";
 import AdBanner from "@/components/ads/AdBanner";
 import AuthorBio from "@/components/articles/AuthorBio";
 import { format } from "date-fns";
-import { Loader2, User, Calendar, Eye, MessageCircle, Bookmark, BookmarkCheck } from "lucide-react";
+import { Loader2, User, Calendar, Eye, MessageCircle, Bookmark, BookmarkCheck, ArrowLeft } from "lucide-react";
 
 export default function ArticlePage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +129,15 @@ export default function ArticlePage() {
     >
       <PublicNav />
       <article className="max-w-4xl mx-auto px-4 py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-primary hover:text-red-400 transition-colors mb-6 font-inter text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
         {/* Category */}
         <div className="mb-4">
           <Link to={`/category/${article.category?.toLowerCase()}`}>
