@@ -18,7 +18,9 @@ export default function UsersManager() {
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
-    base44.entities.User.list("-created_date", 100).then(setUsers).finally(() => setLoading(false));
+    base44.functions.invoke("manageUsers", { action: "list" }).then(res => {
+      setUsers(res.data.users || []);
+    }).finally(() => setLoading(false));
     base44.entities.UserSubscription.filter({ status: "active" }).then(setSubscriptions);
   }, []);
 
