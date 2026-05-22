@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 // Public pages
-import Home from './pages/Home';
+import Home from './pages/Home.jsx';
 import CategoryPage from './pages/CategoryPage';
 import ArticlePage from './pages/ArticlePage';
 import SearchPage from './pages/SearchPage';
