@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ImageUploader from "@/components/media/ImageUploader";
-import { Trash2, Copy, Check, Loader2, Grid, List, AlertTriangle } from "lucide-react";
+import { Trash2, Copy, Check, Loader2, Grid, List, AlertTriangle, Upload } from "lucide-react";
 import { format } from "date-fns";
 
 export default function MediaLibrary() {
@@ -13,10 +13,12 @@ export default function MediaLibrary() {
   const [deletingAll, setDeletingAll] = useState(false);
   const [copied, setCopied] = useState(null);
   const [view, setView] = useState("grid");
+  const [matching, setMatching] = useState(false);
+  const jsonInputRef = useRef();
 
   const load = async () => {
     setLoading(true);
-    const imgs = await base44.entities.MediaImage.list("-created_date", 100);
+    const imgs = await base44.entities.MediaImage.list("-created_date", 1000);
     setImages(imgs);
     setLoading(false);
   };
@@ -57,6 +59,18 @@ export default function MediaLibrary() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const handleMatchImages = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMatching(true);
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const result = await base44.functions.invoke("matchImageToArticles", { jsonData: data });
+    alert(`Matched ${result.matched} images to ${result.articles} articles`);
+    setMatching(false);
+    jsonInputRef.current.value = "";
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -81,8 +95,35 @@ export default function MediaLibrary() {
       </div>
 
       {/* Upload */}
-      <div className="mb-6">
-        <ImageUploader onUpload={handleUpload} />
+      <div className="mb-8 space-y-4">
+        <div>
+          <h2 className="font-oswald font-semibold text-white text-lg uppercase mb-2">Upload Images</h2>
+          <ImageUploader onUpload={handleUpload} />
+        </div>
+
+        {/* JSON Match Section */}
+        {user.role === "admin" && (
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 className="font-oswald font-semibold text-white text-lg uppercase mb-3">Match Images to Articles</h2>
+            <p className="text-muted-foreground font-inter text-sm mb-4">Upload your WordPress JSON export to automatically match images to articles by filename.</p>
+            <input
+              ref={jsonInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleMatchImages}
+              disabled={matching}
+              className="hidden"
+            />
+            <button
+              onClick={() => jsonInputRef.current?.click()}
+              disabled={matching}
+              className="flex items-center gap-2 px-4 py-2 bg-secondary border border-border rounded text-sm font-inter text-foreground hover:border-primary transition-colors disabled:opacity-50"
+            >
+              {matching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {matching ? "Processing..." : "Upload JSON Export"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Grid */}

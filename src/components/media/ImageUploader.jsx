@@ -19,16 +19,30 @@ export default function ImageUploader({ onUpload, compact = false }) {
     onUpload(file_url);
   };
 
+  const handleMultipleFiles = async (files) => {
+    const validFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
+    if (validFiles.length === 0) {
+      setError("Please select image files.");
+      return;
+    }
+    setUploading(true);
+    setError(null);
+    for (const file of validFiles) {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      onUpload(file_url);
+    }
+    setUploading(false);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    handleMultipleFiles(e.dataTransfer.files);
   };
 
   if (compact) {
     return (
       <div>
-        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files[0])} />
+        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => handleMultipleFiles(e.target.files)} />
         <button
           type="button"
           onClick={() => inputRef.current.click()}
@@ -45,7 +59,7 @@ export default function ImageUploader({ onUpload, compact = false }) {
 
   return (
     <div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files[0])} />
+      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => handleMultipleFiles(e.target.files)} />
       <div
         onDrop={handleDrop}
         onDragOver={e => e.preventDefault()}
