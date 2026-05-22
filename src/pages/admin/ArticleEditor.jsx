@@ -26,11 +26,6 @@ export default function ArticleEditor() {
       base44.entities.Article.filter({ id }).then(arts => {
         if (arts.length) {
           const a = arts[0];
-          // Permission check
-          if (user.role === "editor" && a.author_email !== user.email) {
-            navigate("/admin/articles");
-            return;
-          }
           setForm({
             title: a.title || "",
             slug: a.slug || "",

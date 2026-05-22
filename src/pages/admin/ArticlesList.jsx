@@ -15,8 +15,7 @@ export default function ArticlesList() {
 
   const load = async () => {
     setLoading(true);
-    const filter = user.role === "editor" ? { author_email: user.email } : {};
-    const arts = await base44.entities.Article.filter(filter, "-created_date", 100);
+    const arts = await base44.entities.Article.filter({}, "-created_date", 100);
     setArticles(arts);
     setLoading(false);
   };
