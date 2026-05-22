@@ -108,8 +108,9 @@ export default function ArticleEditor() {
   };
 
   // Build flat category list with colours, showing hierarchy
-  const topLevel = allCategories.filter(c => !c.parent_id);
-  const getSubs = (parentId) => allCategories.filter(c => c.parent_id === parentId);
+  const articleCats = allCategories.filter(c => c.usage === "article" || c.usage === "both" || !c.usage);
+  const topLevel = articleCats.filter(c => !c.parent_id);
+  const getSubs = (parentId) => articleCats.filter(c => c.parent_id === parentId);
 
   const flattenedCats = [];
   topLevel.forEach(top => {

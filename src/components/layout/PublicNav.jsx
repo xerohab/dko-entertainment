@@ -199,7 +199,7 @@ export default function PublicNav() {
     });
   }, []);
 
-  const topLevel = allCats.filter(c => !c.parent_id);
+  const topLevel = allCats.filter(c => !c.parent_id && (c.usage === "menu" || c.usage === "both" || !c.usage));
   const getSubs = (parentId) => allCats.filter(c => c.parent_id === parentId);
 
   const handleSearch = (e) => {

@@ -19,6 +19,8 @@ export default function CategoriesManager() {
   const [newColor, setNewColor] = useState(PRESET_COLORS[0].value);
   const [newLink, setNewLink] = useState("");
   const [editLink, setEditLink] = useState("");
+  const [newUsage, setNewUsage] = useState("both");
+  const [editUsage, setEditUsage] = useState("both");
 
   useEffect(() => {
     if (user?.role !== "admin") { navigate("/admin"); return; }
@@ -44,6 +46,7 @@ export default function CategoriesManager() {
       slug: generateSlug(newName.trim()),
       color: newColor,
       link_url: newLink.trim() || null,
+      usage: newUsage,
       parent_id: parentId || null,
       level,
       sort_order: categories.filter(c => c.parent_id === parentId).length,
@@ -51,6 +54,7 @@ export default function CategoriesManager() {
     setNewName("");
     setNewColor(PRESET_COLORS[0].value);
     setNewLink("");
+    setNewUsage("both");
     setAdding(null);
     setSaving(false);
     load();
@@ -64,6 +68,7 @@ export default function CategoriesManager() {
       slug: generateSlug(editName.trim()),
       color: editColor,
       link_url: editLink.trim() || null,
+      usage: editUsage,
     });
     setEditing(null);
     setSaving(false);
@@ -123,6 +128,18 @@ export default function CategoriesManager() {
           className="flex-1 bg-background border border-border/50 rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary"
         />
       </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground font-inter shrink-0">Usage:</span>
+        <select
+          value={newUsage}
+          onChange={e => setNewUsage(e.target.value)}
+          className="flex-1 bg-background border border-border/50 rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none focus:border-primary"
+        >
+          <option value="both">Both (Menu + Article)</option>
+          <option value="menu">Menu only</option>
+          <option value="article">Article tags only</option>
+        </select>
+      </div>
     </div>
   );
 
@@ -176,6 +193,18 @@ export default function CategoriesManager() {
               placeholder="Optional link URL (e.g. https://youtube.com/...)"
               className="w-full bg-secondary border border-border rounded px-3 py-1.5 text-white font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary"
             />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-inter shrink-0">Usage:</span>
+              <select
+                value={editUsage}
+                onChange={e => setEditUsage(e.target.value)}
+                className="flex-1 bg-secondary border border-border rounded px-3 py-1.5 text-white font-inter text-sm focus:outline-none focus:border-primary"
+              >
+                <option value="both">Both (Menu + Article)</option>
+                <option value="menu">Menu only</option>
+                <option value="article">Article tags only</option>
+              </select>
+            </div>
             </div>
           ) : (
             <>
@@ -190,6 +219,8 @@ export default function CategoriesManager() {
                   {depth === 0 && <span className="text-xs font-inter text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">Top Level</span>}
                   {depth === 1 && <span className="text-xs font-inter text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded">Sub</span>}
                   {depth >= 2 && <span className="text-xs font-inter text-muted-foreground bg-secondary/40 px-1.5 py-0.5 rounded">Level {depth + 1}</span>}
+                  {cat.usage === "menu" && <span className="text-xs font-inter text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">Menu only</span>}
+                  {cat.usage === "article" && <span className="text-xs font-inter text-accent bg-accent/10 px-1.5 py-0.5 rounded">Article only</span>}
                 </div>
                 <div className="text-muted-foreground font-inter text-xs mt-0.5">
                   {cat.link_url ? (
@@ -211,7 +242,7 @@ export default function CategoriesManager() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setEditing(cat.id); setEditName(cat.name); setEditColor(cat.color || PRESET_COLORS[0].value); setEditLink(cat.link_url || ""); }}
+                  onClick={() => { setEditing(cat.id); setEditName(cat.name); setEditColor(cat.color || PRESET_COLORS[0].value); setEditLink(cat.link_url || ""); setEditUsage(cat.usage || "both"); }}
                   className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5" />

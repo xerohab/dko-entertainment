@@ -35,6 +35,16 @@
     "link_url": {
       "type": "string",
       "description": "Optional external link URL \u2014 if set, clicking navigates to this URL instead of category page"
+    },
+    "usage": {
+      "type": "string",
+      "enum": [
+        "menu",
+        "article",
+        "both"
+      ],
+      "default": "both",
+      "description": "menu = nav only, article = article tagging only, both = everywhere"
     }
   },
   "required": [
