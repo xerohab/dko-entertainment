@@ -12,12 +12,13 @@ export default function ArticleEditor() {
   const isNew = !id || id === "new";
 
   const [allCategories, setAllCategories] = useState([]);
+  const [allAuthors, setAllAuthors] = useState([]);
   const [form, setForm] = useState({
     title: "", slug: "", excerpt: "", body: "",
     category: "", categories: [],
     featured_image: "", status: "draft",
     published_date: "", seo_title: "", seo_description: "",
-    author_name: "", author_email: "",
+    author_name: "",
   });
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -30,6 +31,10 @@ export default function ArticleEditor() {
 
   useEffect(() => {
     base44.entities.Category.list("sort_order", 200).then(setAllCategories);
+    base44.functions.invoke("manageUsers", { action: "list" }).then(res => {
+      const authors = (res.data?.users || res.users || []).filter(u => u.role === "admin" || u.role === "editor");
+      setAllAuthors(authors);
+    });
     if (!isNew) {
       base44.entities.Article.filter({ id }).then(arts => {
         if (arts.length) {
@@ -47,7 +52,6 @@ export default function ArticleEditor() {
             seo_title: a.seo_title || "",
             seo_description: a.seo_description || "",
             author_name: a.author_name || "",
-            author_email: a.author_email || "",
           });
         }
         setLoading(false);
@@ -89,11 +93,11 @@ export default function ArticleEditor() {
   const handleSave = async (publish = false) => {
     setSaving(true);
     const now = new Date().toISOString();
+    const selectedAuthor = allAuthors.find(a => a.full_name === form.author_name);
     const data = {
       ...form,
       status: publish ? "published" : "draft",
-      author_email: form.author_email || user.email,
-      author_name: form.author_name || user.display_name || user.full_name,
+      author_email: selectedAuthor?.email || user.email,
       ...(publish && !form.published_date ? { published_date: now } : {}),
     };
     if (isNew) {
@@ -187,7 +191,7 @@ export default function ArticleEditor() {
           </button>
           <button
             onClick={() => handleSave(true)}
-            disabled={saving || !form.title || form.categories.length === 0}
+            disabled={saving || !form.title || form.categories.length === 0 || !form.author_name}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-oswald font-semibold tracking-wider uppercase text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-40"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -239,26 +243,22 @@ export default function ArticleEditor() {
           </div>
 
           {/* Author */}
-          <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author Name</label>
-                <input
-                  value={form.author_name}
-                  onChange={e => setForm(f => ({ ...f, author_name: e.target.value }))}
-                  placeholder="Author name..."
-                  className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author Email</label>
-                <input
-                  value={form.author_email}
-                  onChange={e => setForm(f => ({ ...f, author_email: e.target.value }))}
-                  placeholder="author@example.com..."
-                  className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground font-inter text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
+          <div>
+            <label className="block font-inter text-sm font-medium text-foreground mb-1.5">Author *</label>
+            <select
+              value={form.author_name}
+              onChange={e => setForm(f => ({ ...f, author_name: e.target.value }))}
+              disabled={user?.role !== "admin" && !isNew}
+              className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground font-inter text-sm focus:outline-none focus:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Select an author...</option>
+              {allAuthors.map(author => (
+                <option key={author.id} value={author.full_name}>
+                  {author.full_name} ({author.role})
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Body */}
           <div>
@@ -339,12 +339,12 @@ export default function ArticleEditor() {
                 </button>
                 <button
                   onClick={() => handleSave(true)}
-                  disabled={saving || !form.title || form.categories.length === 0}
+                  disabled={saving || !form.title || form.categories.length === 0 || !form.author_name}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white font-oswald font-semibold tracking-wider uppercase text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-40"
-                >
+                  >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Publish
-                </button>
+                  </button>
               </div>
             </div>
             <p className="text-muted-foreground font-inter text-xs mt-3 flex items-center gap-1">
