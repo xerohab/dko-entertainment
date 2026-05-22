@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import PublicNav from "@/components/layout/PublicNav";
 import ArticleCard from "@/components/articles/ArticleCard";
 import CommentsSection from "@/components/article/CommentsSection";
+import AdBanner from "@/components/ads/AdBanner";
 import { format } from "date-fns";
 import { Loader2, User, Calendar, Eye, MessageCircle } from "lucide-react";
 
@@ -113,6 +114,9 @@ export default function ArticlePage() {
           </div>
         </div>
 
+        {/* Top Ad */}
+        <AdBanner slot="top" className="mb-6" />
+
         {/* Featured Image */}
         {article.featured_image && (
           <div className="mb-8 rounded-xl overflow-hidden border border-border">
@@ -141,6 +145,9 @@ export default function ArticlePage() {
           "
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
+
+        {/* Mid Ad */}
+        <AdBanner slot="mid" className="my-8" />
 
         {/* Comments */}
         <CommentsSection article={article} />

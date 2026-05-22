@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import AdminSidebar from "@/components/layout/AdminSidebar";
-import { Loader2, Menu, ArrowLeft } from "lucide-react";
+import { Loader2, Menu, ArrowLeft, LayoutDashboard, FileText, Image, MessageCircle, Settings, UserCircle } from "lucide-react";
 
 export default function AdminLayout() {
   const [user, setUser] = useState(null);
@@ -82,8 +82,41 @@ export default function AdminLayout() {
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           <Outlet context={{ user }} />
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-sidebar border-t border-sidebar-border flex items-center justify-around py-2 px-1">
+          {[
+            { to: "/admin", icon: LayoutDashboard, label: "Home", exact: true },
+            { to: "/admin/articles", icon: FileText, label: "Articles" },
+            { to: "/admin/media", icon: Image, label: "Media" },
+            { to: "/admin/comments", icon: MessageCircle, label: "Comments" },
+            { to: "/admin/profile", icon: UserCircle, label: "Profile" },
+          ].map(item => {
+            const Icon = item.icon;
+            const active = item.exact ? location.pathname === item.to : location.pathname.startsWith(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded transition-colors min-w-0 ${active ? "text-primary" : "text-muted-foreground hover:text-white"}`}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="font-inter text-[10px] truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+          {user?.role === "admin" && (
+            <Link
+              to="/admin/settings"
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded transition-colors min-w-0 ${location.pathname.startsWith("/admin/settings") ? "text-primary" : "text-muted-foreground hover:text-white"}`}
+            >
+              <Settings className="w-5 h-5 shrink-0" />
+              <span className="font-inter text-[10px] truncate">Settings</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>
