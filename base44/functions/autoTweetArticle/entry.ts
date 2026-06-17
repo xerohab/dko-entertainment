@@ -1,6 +1,39 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import OAuth from 'npm:oauth-1.0a@2.2.6';
-import { createHmac } from 'node:crypto';
+
+function oauth1aSign(method, url, params, consumerKey, consumerSecret, accessToken, accessSecret) {
+  const oauthParams = {
+    oauth_consumer_key: consumerKey,
+    oauth_nonce: crypto.randomUUID().replace(/-/g, ''),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: accessToken,
+    oauth_version: '1.0',
+  };
+
+  const allParams = { ...oauthParams, ...params };
+  const paramStr = Object.keys(allParams)
+    .sort()
+    .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(allParams[k])}`)
+    .join('&');
+
+  const sigBase = `${method.toUpperCase()}&${encodeURIComponent(url)}&${encodeURIComponent(paramStr)}`;
+  const sigKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessSecret)}`;
+
+  const keyBytes = new TextEncoder().encode(sigKey);
+  const msgBytes = new TextEncoder().encode(sigBase);
+
+  return crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'])
+    .then(key => crypto.subtle.sign('HMAC', key, msgBytes))
+    .then(sig => {
+      const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)));
+      oauthParams.oauth_signature = sigB64;
+
+      const header = 'OAuth ' + Object.keys(oauthParams)
+        .map(k => `${encodeURIComponent(k)}="${encodeURIComponent(oauthParams[k])}"`)
+        .join(', ');
+      return header;
+    });
+}
 
 Deno.serve(async (req) => {
   try {
@@ -39,30 +72,17 @@ Deno.serve(async (req) => {
     const accessSecret = settingsMap['twitter_access_secret'];
 
     if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
-      return Response.json({ error: 'Twitter credentials not configured' }, { status: 400 });
+      return Response.json({ error: 'Twitter OAuth 1.0a credentials not fully configured in Site Settings.' }, { status: 400 });
     }
 
     // Build tweet text
     const articleUrl = `${Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app'}/article/${article.slug || article.id}`;
     const tweetText = `${article.title}\n\n${articleUrl}`;
 
-    // OAuth 1.0a signing
-    const oauth = new OAuth({
-      consumer: { key: apiKey, secret: apiSecret },
-      signature_method: 'HMAC-SHA1',
-      hash_function(base_string, key) {
-        return createHmac('sha1', key).update(base_string).digest('base64');
-      },
-    });
-
-    const url = 'https://api.twitter.com/2/tweets';
-    const token = { key: accessToken, secret: accessSecret };
-    const authHeader = oauth.toHeader(oauth.authorize({ url, method: 'POST' }, token));
-
+    const tweetUrl = 'https://api.twitter.com/2/tweets';
     const payload = { text: tweetText };
 
     // Upload and attach featured image if exists
-    console.log('Article featured_image:', article.featured_image);
     if (article.featured_image) {
       try {
         const controller = new AbortController();
@@ -72,7 +92,6 @@ Deno.serve(async (req) => {
         const bytes = await imgRes.arrayBuffer();
         clearTimeout(timeout);
 
-        // Convert to base64 in chunks to avoid stack overflow
         const uint8 = new Uint8Array(bytes.slice(0, 5242880));
         let b64 = '';
         const chunkSize = 8192;
@@ -82,7 +101,7 @@ Deno.serve(async (req) => {
         b64 = btoa(b64);
 
         const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json';
-        const uploadAuth = oauth.toHeader(oauth.authorize({ url: uploadUrl, method: 'POST', data: { media_data: b64 } }, token));
+        const uploadAuth = await oauth1aSign('POST', uploadUrl, { media_data: b64 }, apiKey, apiSecret, accessToken, accessSecret);
         
         const controller2 = new AbortController();
         const timeout2 = setTimeout(() => controller2.abort(), 15000);
@@ -90,7 +109,7 @@ Deno.serve(async (req) => {
         const uploadRes = await fetch(uploadUrl, {
           method: 'POST',
           headers: { 
-            'Authorization': uploadAuth['Authorization'],
+            'Authorization': uploadAuth,
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: new URLSearchParams({ media_data: b64 }),
@@ -99,23 +118,21 @@ Deno.serve(async (req) => {
         clearTimeout(timeout2);
 
         const media = await uploadRes.json();
-        console.log('Twitter media upload response:', media);
         if (media.media_id_string) {
-          console.log('Media ID set:', media.media_id_string);
           payload.media = { media_ids: [media.media_id_string] };
-        } else {
-          console.warn('No media_id_string in response:', media);
         }
       } catch (imgErr) {
-        console.error('Image upload failed:', imgErr.message);
+        console.warn('Image upload failed (tweet will still post without image):', imgErr.message);
       }
     }
 
-    const tweetRes = await fetch(url, {
+    const tweetAuth = await oauth1aSign('POST', tweetUrl, {}, apiKey, apiSecret, accessToken, accessSecret);
+
+    const tweetRes = await fetch(tweetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': authHeader['Authorization'],
+        'Authorization': tweetAuth,
       },
       body: JSON.stringify(payload),
     });
@@ -123,12 +140,11 @@ Deno.serve(async (req) => {
     const tweetData = await tweetRes.json();
 
     if (tweetRes.ok) {
-      // Mark as tweeted
       await base44.asServiceRole.entities.Article.update(articleId, { tweeted: true });
       return Response.json({ success: true, tweet: tweetData });
     } else {
-      console.error('Twitter API error:', tweetData);
-      return Response.json({ error: 'Twitter API error', details: tweetData }, { status: 500 });
+      const msg = tweetData?.detail || tweetData?.errors?.[0]?.message || JSON.stringify(tweetData);
+      return Response.json({ error: `Twitter API error: ${msg}`, details: tweetData }, { status: tweetRes.status });
     }
   } catch (error) {
     console.error('autoTweetArticle error:', error);
