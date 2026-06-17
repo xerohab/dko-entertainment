@@ -76,7 +76,8 @@ Deno.serve(async (req) => {
     }
 
     // Build tweet text
-    const articleUrl = `${Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app'}/article/${article.slug || article.id}`;
+    const siteUrl = (Deno.env.get('SITE_URL') || 'https://dko-wrestling.base44.app').replace(/\/+$/, '');
+    const articleUrl = `${siteUrl}/article/${article.slug || article.id}`;
     const tweetText = `${article.title}\n\n${articleUrl}`;
 
     const tweetUrl = 'https://api.twitter.com/2/tweets';
