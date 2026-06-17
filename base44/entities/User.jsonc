@@ -31,5 +31,12 @@
       "type": "string",
       "description": "Twitter/X handle without @"
     }
-  }
+  },
+  "required": [
+    "display_name",
+    "avatar",
+    "motto",
+    "bio",
+    "twitter_handle"
+  ]
 }

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import PublicNav from "@/components/layout/PublicNav";
 import ArticleCard from "@/components/articles/ArticleCard";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Shield } from "lucide-react";
 
 export default function Home() {
   const [articles, setArticles] = useState([]);
@@ -13,6 +13,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [currentUser, setCurrentUser] = useState(null);
   const PAGE_SIZE = 6;
 
   useEffect(() => {
@@ -22,6 +23,9 @@ export default function Home() {
     
     base44.entities.Category.list("sort_order", 200).then(setCategories).catch(() => {});
     loadArticles(1, "", "");
+    base44.auth.isAuthenticated().then(authed => {
+      if (authed) base44.auth.me().then(setCurrentUser).catch(() => {});
+    });
   }, []);
 
   const loadArticles = async (pageNum, searchVal, catVal) => {
@@ -193,6 +197,17 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {/* Admin FAB */}
+      {currentUser && (currentUser.role === "admin" || currentUser.role === "editor") && (
+        <Link
+          to="/admin"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-primary text-white font-oswald text-sm font-bold tracking-wider uppercase rounded-full shadow-lg shadow-primary/30 hover:bg-red-700 hover:shadow-red-700/30 hover:scale-105 transition-all"
+        >
+          <Shield className="w-4 h-4" />
+          Admin Panel
+        </Link>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-border mt-16 py-8 text-center">
