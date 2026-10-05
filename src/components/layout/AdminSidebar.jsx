@@ -31,7 +31,7 @@ export default function AdminSidebar({ user }) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-sidebar-border">
         <Link to="/" className="block">
-          <div className="font-oswald font-bold text-white text-base tracking-wide leading-tight">DKO Entertainment</div>
+          <div className="font-oswald font-bold text-white text-base tracking-wide leading-tight">DKO Sports Entertainment</div>
         </Link>
         <div className="mt-2 text-xs font-inter text-muted-foreground">
           {isAdmin ? "Admin Panel" : "Editor Panel"}

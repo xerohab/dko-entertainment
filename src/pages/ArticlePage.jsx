@@ -43,8 +43,8 @@ export default function ArticlePage() {
         
         // Update page title and meta description
         const pageTitle = a.seo_title || a.title;
-        const pageDescription = a.seo_description || a.excerpt || "Read more on DKO Entertainment";
-        document.title = `${pageTitle} | DKO Entertainment`;
+        const pageDescription = a.seo_description || a.excerpt || "Read more on DKO Sports Entertainment";
+        document.title = `${pageTitle} | DKO Sports Entertainment`;
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.setAttribute('content', pageDescription);
         
@@ -242,7 +242,7 @@ export default function ArticlePage() {
           <div className="flex items-center justify-center gap-2 mb-3">
             <img src="https://media.base44.com/images/public/6a103683a6ef187b171ab5e9/0d98afbe2_541532195_1275130367423447_7827965385774690328_n.jpg" alt="DKO Entertainment" className="h-10 w-auto" />
           </div>
-          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Entertainment All rights reserved. Part of DKO LTD</p>
+          <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Sports Entertainment All rights reserved. Part of DKO LTD</p>
         </div>
       </footer>
 
