@@ -213,7 +213,7 @@ export default function Home() {
       <footer className="border-t border-border mt-16 py-8 text-center">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <img src="https://media.base44.com/images/public/6a103683a6ef187b171ab5e9/0d98afbe2_541532195_1275130367423447_7827965385774690328_n.jpg" alt="DKO Entertainment" className="h-10 w-auto" />
+            <img src="https://media.base44.com/images/public/6a103683a6ef187b171ab5e9/ee7f634db_DKOSportsEntertainmentShowcase.png" alt="DKO Sports Entertainment" className="h-10 w-auto" />
           </div>
           <p className="text-muted-foreground font-inter text-xs">© 2026 DKO Sports Entertainment All rights reserved. Part of DKO LTD</p>
         </div>
