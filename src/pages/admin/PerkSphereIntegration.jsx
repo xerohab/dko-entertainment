@@ -26,11 +26,15 @@ export default function PerkSphereIntegration() {
         message: data.message || null,
       });
     } catch (err) {
-      const data = err?.response?.data;
-      const status = err?.response?.status;
+      const raw = err?.response?.data;
+      const data = raw?.data && typeof raw.data === "object" ? raw.data : raw;
+      const status = err?.response?.status || err?.status;
       const code = data?.errorCode || data?.code || err?.code || "request_failed";
-      const message = typeof data?.message === "string" ? data.message : "The verification function could not complete. Check Base44 function logs if this persists.";
-      setError(`Verification error (${code}${status ? `, HTTP ${status}` : ""}): ${message}`);
+      const safeMessage = typeof data?.message === "string" && /^[a-zA-Z0-9 .,;:()_/-]{1,180}$/.test(data.message) ? data.message : null;
+      const sdkMessage = typeof err?.message === "string" && /^[a-zA-Z0-9 .,;:()_/-]{1,180}$/.test(err.message) ? err.message : null;
+      const message = safeMessage || sdkMessage || "Request failed. See function execution details.";
+      const diagnostics = [status && `HTTP ${status}`, err?.name && `type ${err.name}`, err?.response ? "HTTP response received" : "No HTTP response exposed"].filter(Boolean).join("; ");
+      setError(`Verification error (${code}): ${message}${diagnostics ? ` (${diagnostics})` : ""}`);
     } finally {
       setRunning(false);
     }
