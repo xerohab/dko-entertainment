@@ -15,7 +15,7 @@ export default function PerkSphereIntegration() {
     setReport(null);
     setError("");
     try {
-      const response = await base44.functions.partnerProofOfPossession({});
+      const response = await base44.functions.invoke("partnerProofOfPossession", {});
       const data = response?.data || {};
       setReport({
         ok: data.ok === true,
