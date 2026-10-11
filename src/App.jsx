@@ -29,6 +29,7 @@ import CommentsManager from './pages/admin/CommentsManager';
 import SubscriptionsManager from './pages/admin/SubscriptionsManager';
 import ArticleAnalytics from './pages/admin/ArticleAnalytics';
 import AdsManager from './pages/admin/AdsManager';
+import PerkSphereIntegration from './pages/admin/PerkSphereIntegration';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -77,6 +78,7 @@ const AuthenticatedApp = () => {
         <Route path="subscriptions" element={<SubscriptionsManager />} />
         <Route path="analytics" element={<ArticleAnalytics />} />
         <Route path="ads" element={<AdsManager />} />
+        <Route path="perksphere" element={<PerkSphereIntegration />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
