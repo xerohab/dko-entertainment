@@ -1,0 +1,27 @@
+name: Perk Sphere partner integration checks
+on:
+  push:
+    branches: [main, launch-readiness-2026-10-10]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  partner-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run check:backend
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          VITE_BASE44_APP_ID: 6a103683a6ef187b171ab5e9
+      - name: Dependency report (known build-tool advisories remain)
+        run: npm audit --omit=dev
+        continue-on-error: true

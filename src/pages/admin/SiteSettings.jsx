@@ -68,7 +68,7 @@ function SecretField({ label, fieldKey, value, onChange }) {
 }
 
 export default function SiteSettings() {
-  const { user } = useOutletContext();
+  const { user } = /** @type {{user: {id: string, email?: string, role?: string, display_name?: string, full_name?: string}}} */ (useOutletContext());
   const navigate = useNavigate();
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);

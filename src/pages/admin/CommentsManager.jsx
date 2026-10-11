@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, Link } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { MessageCircle, Trash2, Check, X, Eye, Loader2, Search } from "lucide-react";
+import { MessageCircle, Trash2, Check, X, Loader2, Search } from "lucide-react";
 import { format } from "date-fns";
 
 export default function CommentsManager() {
-  const { user } = useOutletContext();
+  const { user } = /** @type {{user: {id: string, email?: string, role?: string, display_name?: string, full_name?: string}}} */ (useOutletContext());
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");

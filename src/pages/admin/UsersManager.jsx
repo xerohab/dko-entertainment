@@ -5,12 +5,12 @@ import { UserPlus, Edit2, Loader2, Mail, ChevronDown, Crown, X } from "lucide-re
 import { Link } from "react-router-dom";
 
 export default function UsersManager() {
-  const { user } = useOutletContext();
+  const { user } = /** @type {{user: {id: string, email?: string, role?: string, display_name?: string, full_name?: string}}} */ (useOutletContext());
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("editor");
+  const [inviteRole, setInviteRole] = useState("user");
   const [inviting, setInviting] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -27,7 +27,8 @@ export default function UsersManager() {
   const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
     setInviting(true);
-    await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
+    if (!['user','admin'].includes(inviteRole)) { setInviting(false); return; }
+    await base44.users.inviteUser(inviteEmail.trim(), inviteRole === 'admin' ? 'admin' : 'user');
     setInviteEmail("");
     setInviting(false);
     alert(`Invitation sent to ${inviteEmail.trim()} as ${inviteRole}`);
@@ -96,7 +97,7 @@ export default function UsersManager() {
             onChange={e => setInviteRole(e.target.value)}
             className="bg-secondary border border-border rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
           >
-            <option value="editor">Editor</option>
+            <option value="user">Member (assign editor access after registration)</option>
             <option value="admin">Admin</option>
           </select>
           <button

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Crown, Plus, Edit2, Trash2, Check, X, Loader2, Star, Users } from "lucide-react";
+import { Crown, Plus, Edit2, Trash2, Check, X, Loader2, Star } from "lucide-react";
 
 export default function SubscriptionsManager() {
-  const { user } = useOutletContext();
+  const { user } = /** @type {{user: {id: string, email?: string, role?: string, display_name?: string, full_name?: string}}} */ (useOutletContext());
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [subscribers, setSubscribers] = useState([]);

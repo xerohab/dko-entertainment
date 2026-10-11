@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 
 export default function ImageUploader({ onUpload, compact = false }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
-  const inputRef = useRef();
+  const inputRef = useRef(null);
 
   const handleFile = async (file) => {
     if (!file || !file.type.startsWith("image/")) {

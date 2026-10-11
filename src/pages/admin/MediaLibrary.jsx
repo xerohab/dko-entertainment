@@ -6,7 +6,7 @@ import { Trash2, Copy, Check, Loader2, Grid, List, AlertTriangle, Upload } from 
 import { format } from "date-fns";
 
 export default function MediaLibrary() {
-  const { user } = useOutletContext();
+  const { user } = /** @type {{user: {id: string, email?: string, role?: string, display_name?: string, full_name?: string}}} */ (useOutletContext());
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
@@ -15,7 +15,7 @@ export default function MediaLibrary() {
   const [view, setView] = useState("grid");
   const [matching, setMatching] = useState(false);
   const [selected, setSelected] = useState(new Set());
-  const jsonInputRef = useRef();
+  const jsonInputRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
