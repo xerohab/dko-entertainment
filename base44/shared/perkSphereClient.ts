@@ -83,6 +83,11 @@ export const LIVE_ENABLED = secrets.get("PERKSPHERE_PARTNER_ENABLED") === "true"
 
 
 
+// Reward events require a separate explicit release decision. Enabling
+// account linking must never automatically enable reward issuance.
+export const REWARD_EVENTS_ENABLED = LIVE_ENABLED &&
+  secrets.get("PERKSPHERE_REWARD_EVENTS_ENABLED") === "true";
+
 export class PerkSphereSetupError extends Error {
 
   constructor(code, message) {

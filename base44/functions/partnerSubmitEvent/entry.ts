@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import {
-  LIVE_ENABLED,
+  REWARD_EVENTS_ENABLED,
   getPartnerStatus,
   perkSphereRequest,
 } from "../../shared/perkSphereClient.ts";
@@ -51,8 +51,8 @@ function buildEvidence(eventType, ev) {
 // Submits a reward-eligible activity event to Perk Sphere for the signed-in,
 // linked DKO user. Enforces idempotency (stable partner_event_id), user-scoping,
 // and the strict Linux event payload contract. DKO never awards Points/XP —
-// Linux is the sole reward authority. Submission is disabled (LIVE_ENABLED =
-// false) until the partner is activated.
+// Linux is the sole reward authority. Submission is disabled (REWARD_EVENTS_ENABLED =
+// false) until a separate reward workflow release is authorised.
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -104,12 +104,12 @@ export default async function(req) {
 
     // Submission is disabled until the partner is activated. Do not record a
     // pending event (so a later live submission is not blocked by dedup).
-    if (!LIVE_ENABLED) {
+    if (!REWARD_EVENTS_ENABLED) {
       return Response.json({
         ok: false,
         code: "setup_required",
         partnerStatus: getPartnerStatus(),
-        message: "Event submission is disabled until the Perk Sphere partner is activated.",
+        message: "Reward event submission is disabled until the separately authorised reward workflow is enabled.",
       }, { status: 503 });
     }
 
