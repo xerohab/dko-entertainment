@@ -27,7 +27,10 @@ export default function PerkSphereIntegration() {
       });
     } catch (err) {
       const data = err?.response?.data;
-      setError(data?.message || data?.code || "Verification failed. Check the configured Base44 secrets and Linux API.");
+      const status = err?.response?.status;
+      const code = data?.errorCode || data?.code || err?.code || "request_failed";
+      const message = typeof data?.message === "string" ? data.message : "The verification function could not complete. Check Base44 function logs if this persists.";
+      setError(`Verification error (${code}${status ? `, HTTP ${status}` : ""}): ${message}`);
     } finally {
       setRunning(false);
     }
