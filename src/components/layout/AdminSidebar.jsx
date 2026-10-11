@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight, UserCircle, MessageCircle, TrendingUp, Crown, Megaphone } from "lucide-react";
+import { LayoutDashboard, FileText, Image, Tag, Settings, Users, LogOut, ChevronRight, UserCircle, MessageCircle, TrendingUp, Crown, Megaphone, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const adminLinks = [
@@ -13,6 +13,7 @@ const adminLinks = [
   { to: "/admin/categories", label: "Categories", icon: Tag, adminOnly: true },
   { to: "/admin/users", label: "Users", icon: Users, adminOnly: true },
   { to: "/admin/settings", label: "Settings", icon: Settings, adminOnly: true },
+  { to: "/admin/perksphere", label: "PerkSphere Integration", icon: ShieldCheck, adminOnly: true },
 ];
 
 export default function AdminSidebar({ user }) {
